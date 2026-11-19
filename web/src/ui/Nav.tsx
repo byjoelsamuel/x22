@@ -1,11 +1,12 @@
 import type { ReactNode } from 'react'
-import { IconHome, IconLibrary, IconSettings } from './icons'
+import { IconHome, IconLibrary, IconSettings, IconUpload } from './icons'
 
-export type TabId = 'home' | 'library' | 'settings'
+export type TabId = 'home' | 'library' | 'import' | 'settings'
 
 const TABS: { id: TabId; name: string; icon: ReactNode }[] = [
   { id: 'home', name: 'Home', icon: <IconHome /> },
   { id: 'library', name: 'Library', icon: <IconLibrary /> },
+  { id: 'import', name: 'Import', icon: <IconUpload /> },
   { id: 'settings', name: 'Settings', icon: <IconSettings /> },
 ]
 

@@ -4,6 +4,7 @@ import { bindPlayer, usePlayer } from './state/player'
 import { useSettings } from './state/settings'
 import './ui/app.css'
 import Home from './ui/Home'
+import Import from './ui/Import'
 import Library from './ui/Library'
 import Login from './ui/Login'
 import MiniPlayer from './ui/MiniPlayer'
@@ -16,6 +17,7 @@ export default function App() {
   const theme = useSettings((s) => s.theme)
   const [tab, setTab] = useState<TabId>('home')
   const [playerOpen, setPlayerOpen] = useState(false)
+  const [libraryVersion, setLibraryVersion] = useState(0)
 
   useEffect(() => {
     if (theme === 'system') document.documentElement.removeAttribute('data-theme')
@@ -50,7 +52,8 @@ export default function App() {
   return (
     <div className="shell">
       {tab === 'home' && <Home onOpenPlayer={() => setPlayerOpen(true)} />}
-      {tab === 'library' && <Library />}
+      {tab === 'library' && <Library refreshKey={libraryVersion} />}
+      {tab === 'import' && <Import onLibraryChanged={() => setLibraryVersion((v) => v + 1)} />}
       {tab === 'settings' && <Settings />}
       {!playerOpen && <MiniPlayer onOpen={() => setPlayerOpen(true)} />}
       <Nav tab={tab} onTab={setTab} />

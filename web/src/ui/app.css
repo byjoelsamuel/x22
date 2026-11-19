@@ -331,3 +331,35 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .icon-btn { position: relative; }
 .np-foot { display: flex; justify-content: space-between; align-items: center; }
 .sleep-chips { margin: 0; padding: 0; flex-wrap: wrap; }
+
+/* ── Import ──────────────────────────────────────── */
+.drop {
+  border: 1.5px dashed var(--muted);
+  border-radius: var(--radius);
+  padding: 0;
+  cursor: pointer;
+  background-color: var(--surface);
+  --dot-color: var(--lav);
+  transition: border-color 0.2s;
+}
+.drop.drag { border-color: var(--lav); }
+.drop-inner {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 36px 16px;
+  margin: 10px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+.drop-inner svg { color: var(--lav); }
+.warn { border-color: var(--peach); gap: 4px; }
+.uploads { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.uploads li { display: grid; gap: 6px; }
+.upload-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.bar { height: 3px; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--lav); transition: width 0.2s; }
+.status-saved { color: var(--mint); }
+.status-skipped { color: var(--muted); }
+.status-rejected { color: var(--accent); }
+.success { color: var(--mint); }
