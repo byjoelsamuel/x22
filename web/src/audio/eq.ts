@@ -133,3 +133,32 @@ export function parseAutoEq(text: string): ParametricProfile {
   if (filters.length === 0) throw new Error('No filters found. Use an AutoEq ParametricEQ.txt file.')
   return { preamp, filters }
 }
+
+// ── EQ for other apps (Android DynamicsProcessing) ─────────────────────────
+
+export interface DpBand {
+  /** Upper edge of the band in Hz (DynamicsProcessing uses cut-off frequencies). */
+  cutoff: number
+  gain: number // dB
+}
+
+export const EXTERNAL_BANDS = 32
+
+/**
+ * Sample x22's EQ curve (graphic EQ, preset or AutoEq profile) at 32 log-spaced points
+ * and express it as DynamicsProcessing pre-EQ bands, so other apps get the same shape.
+ */
+export function externalEqBands(filters: Filter[], count = EXTERNAL_BANDS): DpBand[] {
+  const centres = logFreqs(count, 20, 20000)
+  return centres.map((f, i) => ({
+    cutoff: i === count - 1 ? 20000 : Math.round(Math.sqrt(f * centres[i + 1])),
+    gain: Math.round(responseDb(filters, f) * 10) / 10,
+  }))
+}
+
+/** Balance (-1 … 1) as per-channel gains in dB, never boosting. */
+export function balanceDb(balance: number): [number, number] {
+  const b = Math.max(-1, Math.min(1, balance))
+  const toDb = (g: number) => (g <= 0.001 ? -60 : Math.round(20 * Math.log10(g) * 10) / 10)
+  return [toDb(Math.min(1, 1 - b)), toDb(Math.min(1, 1 + b))].map((v) => (v === 0 ? 0 : v)) as [number, number]
+}
