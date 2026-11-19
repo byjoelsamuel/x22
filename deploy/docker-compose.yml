@@ -37,7 +37,7 @@ services:
       UPLOAD_SUBDIR: ${UPLOAD_SUBDIR:-Uploads}
       MAX_FILE_MB: ${MAX_FILE_MB:-2000}
       ALLOWED_USERS: ${ALLOWED_USERS:-}
-      CORS_ORIGINS: ${CORS_ORIGINS:-https://localhost,capacitor://localhost}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost,https://localhost,capacitor://localhost}
       YOUTUBE_API_KEY: ${YOUTUBE_API_KEY:-}
     volumes:
       - ${MUSIC_DIR:?Set MUSIC_DIR in .env to your Navidrome music folder}:/music
