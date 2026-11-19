@@ -4,6 +4,7 @@ import { uploaderHealth, youtubePlaylist, youtubeVideos } from '../api/uploader'
 import { buyLinks, matchTracks, type MatchResult, type SourceTrack } from '../import/match'
 import { parsePastedList, parseTakeout, playlistIdFromLink } from '../import/takeout'
 import { api, useAuth } from '../state/auth'
+import { useBack } from '../state/back'
 import { fmtTime } from './format'
 
 type Source = 'link' | 'takeout' | 'paste'
@@ -23,6 +24,8 @@ export default function PlaylistImport() {
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<MatchResult[]>([])
   const [youtubeReady, setYoutubeReady] = useState<boolean | null>(null)
+
+  useBack(phase.step === 'review', () => setPhase({ step: 'input' }))
 
   useEffect(() => {
     void uploaderHealth(creds).then((h) => setYoutubeReady(!!h.youtube))

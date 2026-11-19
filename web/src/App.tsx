@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from './state/auth'
+import { bindBackButton, useBack } from './state/back'
 import { bindPlayer, usePlayer } from './state/player'
 import { useSettings } from './state/settings'
 import { useUi } from './state/ui'
@@ -31,7 +32,13 @@ export default function App() {
 
   useEffect(() => {
     bindPlayer()
+    bindBackButton()
   }, [])
+
+  // Android back: sheet → Now Playing → inner screens → Home tab → background (never exit).
+  useBack(tab !== 'home', () => setTab('home'))
+  useBack(playerOpen, () => setPlayerOpen(false))
+  useBack(connectOpen, closeConnect)
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
