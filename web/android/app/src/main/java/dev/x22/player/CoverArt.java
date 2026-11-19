@@ -49,11 +49,10 @@ final class CoverArt {
         }
     }
 
-    /** Square-crop, optionally dither, round the corners — widget-ready. */
+    /** Square-crop and optionally dither. Corners are rounded per widget layout, not here. */
     static Bitmap render(Bitmap src, boolean dither) {
         Bitmap square = centerCrop(src, dither ? GRID : SIZE);
-        Bitmap art = dither ? Bitmap.createScaledBitmap(ditherToRamp(square), SIZE, SIZE, false) : square;
-        return rounded(art, SIZE * 0.11f);
+        return dither ? Bitmap.createScaledBitmap(ditherToRamp(square), SIZE, SIZE, false) : square;
     }
 
     private static Bitmap centerCrop(Bitmap src, int size) {
@@ -82,7 +81,7 @@ final class CoverArt {
         return out;
     }
 
-    private static Bitmap rounded(Bitmap src, float radius) {
+    static Bitmap rounded(Bitmap src, float radius) {
         Bitmap out = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setShader(new BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP));

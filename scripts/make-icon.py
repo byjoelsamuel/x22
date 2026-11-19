@@ -194,9 +194,8 @@ def widget_assets(res):
     img.paste(scaled(rounded(render(), 14), art), (pad, pad), scaled(rounded(render(), 14), art))
     font = lambda size: ImageFont.load_default(size=size)
     tx = pad + art + 28
-    d.text((tx, pad + 4), "NOW PLAYING", font=font(20), fill=(138, 138, 138))
-    d.text((tx, pad + 34), "Midnight Drive", font=font(32), fill=(242, 242, 242))
-    d.text((tx, pad + 74), "Kavinsky", font=font(24), fill=(138, 138, 138))
+    d.text((tx, pad + 30), "Midnight Drive", font=font(32), fill=(242, 242, 242))
+    d.text((tx, pad + 70), "Kavinsky", font=font(24), fill=(138, 138, 138))
     cy = pad + art - 44
     for i, cx in enumerate([tx + 40, tx + 148, tx + 256]):
         r = 44 if i == 1 else 40
