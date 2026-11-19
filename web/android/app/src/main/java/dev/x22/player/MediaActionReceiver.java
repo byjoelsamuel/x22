@@ -27,6 +27,11 @@ public class MediaActionReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         String js = PREV.equals(action) ? "prev" : NEXT.equals(action) ? "next" : TOGGLE.equals(action) ? "toggle" : null;
         if (js == null) return;
+        if (NowPlayingStore.isExternal(ctx)) {
+            // YouTube Music & co. are controlled natively — works even when x22 is closed.
+            ExternalMedia.get(ctx).control(js, 0);
+            return;
+        }
         if (!NowPlayingPlugin.dispatch(js)) {
             // App isn't running: show the idle widget, whose buttons open the app.
             NowPlayingStore.setPlaying(ctx, false);

@@ -1,23 +1,27 @@
 import { useState } from 'react'
 import { PRESETS } from '../audio/eq'
 import { api, useAuth } from '../state/auth'
+import { openExternalApp, useExternal } from '../native/external'
 import { usePlayer } from '../state/player'
+import { useNowPlaying } from '../state/source'
 import { useUi } from '../state/ui'
 import { activeFilters, currentMode, effectivePreamp, SOUND_MODES, useSettings } from '../state/settings'
 import DitherImage from './DitherImage'
 import EqCurve from './EqCurve'
-import { fmtDb, qualityBadge } from './format'
+import { fmtDb } from './format'
+import SourceChip from './SourceChip'
 
 export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
   const s = useSettings()
-  const song = usePlayer((p) => p.queue[p.index])
-  const playing = usePlayer((p) => p.playing)
+  const np = useNowPlaying(300)
+  const canControlApps = useExternal((e) => e.available && e.granted)
   const [busy, setBusy] = useState(false)
   const connected = useAuth((a) => !!a.creds)
   const openConnect = useUi((u) => u.openConnect)
   const filters = activeFilters(s)
   const mode = currentMode(s)
-  const badge = song ? qualityBadge(song, s.maxBitRate) : null
+  // For other apps the source chip already names the app.
+  const badge = np?.isX22 ? np.badge : null
   const presets = [...PRESETS, ...s.customPresets]
 
   async function shuffleAll() {
@@ -42,25 +46,39 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
     <div className="page home">
       <header className="home-head">
         <span className="dot brand">x22</span>
-        {badge && <span className={`badge badge-${badge.tier}`}>{badge.label}</span>}
+        <span className="home-head-right">
+          <SourceChip />
+          {badge && <span className={`badge badge-${badge.tier}`}>{badge.label}</span>}
+        </span>
       </header>
 
-      <section className="card hero" onClick={song ? onOpenPlayer : undefined}>
-        <DitherImage src={song ? api().coverUrl(song.coverArt, 300) : undefined} className="hero-art" alt={song?.album} />
+      <section className="card hero" onClick={np ? onOpenPlayer : undefined}>
+        <DitherImage src={np?.cover} className="hero-art" alt={np?.album} />
         <div className="hero-meta">
-          {song ? (
+          {np ? (
             <>
-              <span className="label">{playing ? 'Now playing' : 'Paused'}</span>
-              <strong className="hero-title">{song.title}</strong>
-              <span className="muted">{song.artist}</span>
+              <span className="label">{np.playing ? 'Now playing' : 'Paused'}</span>
+              <strong className="hero-title">{np.title}</strong>
+              <span className="muted">{np.artist}</span>
             </>
           ) : (
             <>
               <span className="label">Nothing playing</span>
               <div className="hero-actions">
-                {connected ? (
+                {canControlApps && (
                   <button
                     className="pill pill-solid"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void openExternalApp()
+                    }}
+                  >
+                    Open YouTube Music
+                  </button>
+                )}
+                {connected ? (
+                  <button
+                    className={canControlApps ? 'pill' : 'pill pill-solid'}
                     disabled={busy}
                     onClick={(e) => {
                       e.stopPropagation()

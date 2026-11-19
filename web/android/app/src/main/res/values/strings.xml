@@ -16,4 +16,5 @@
     <string name="action_pause">Pause</string>
     <string name="action_next">Next</string>
     <string name="channel_playback">Playback</string>
+    <string name="listener_name">x22 — control music apps</string>
 </resources>

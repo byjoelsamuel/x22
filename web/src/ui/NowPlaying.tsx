@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { getEngine } from '../audio/engine'
-import { api } from '../state/auth'
 import { usePlayer } from '../state/player'
 import { useSettings, type GestureAction } from '../state/settings'
+import { sourceActions, useNowPlaying } from '../state/source'
 import DitherImage from './DitherImage'
-import { fmtTime, qualityBadge } from './format'
+import { fmtTime } from './format'
 import { IconDown, IconHeart, IconMoon, IconNext, IconPause, IconPlay, IconPrev, IconQueue, IconRepeat, IconShuffle } from './icons'
 import TrackList from './TrackList'
 
 function runGesture(action: GestureAction) {
-  const p = usePlayer.getState()
-  if (action === 'toggle') p.toggle()
-  else if (action === 'next') p.next()
-  else if (action === 'prev') p.prev()
-  else if (action === 'like') void p.toggleLike()
+  // Transport gestures follow whatever is playing (x22 or another app); like is homelab-only.
+  if (action === 'toggle') sourceActions.toggle()
+  else if (action === 'next') sourceActions.next()
+  else if (action === 'prev') sourceActions.prev()
+  else if (action === 'like') void usePlayer.getState().toggleLike()
   else if (action === 'art') useSettings.getState().set({ ditherArt: !useSettings.getState().ditherArt })
 }
 
@@ -69,7 +69,7 @@ const SLEEP_OPTIONS: { label: string; value: number | 'track' | null }[] = [
 
 export default function NowPlaying({ onClose }: { onClose: () => void }) {
   const p = usePlayer()
-  const maxBitRate = useSettings((s) => s.maxBitRate)
+  const np = useNowPlaying(800)
   const [showQueue, setShowQueue] = useState(false)
   const [showSleep, setShowSleep] = useState(false)
   const [scrub, setScrub] = useState<number | null>(null)
@@ -89,9 +89,10 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', esc)
   }, [onClose])
 
-  if (!song) return null
-  const badge = qualityBadge(song, maxBitRate)
-  const outRate = getEngine().sampleRate
+  if (!np) return null
+  const x22 = np.isX22 && !!song
+  const badge = np.badge
+  const outRate = x22 ? getEngine().sampleRate : null
   const sleepLeft =
     p.sleepAt === -1 ? 'end of track' : p.sleepAt ? `${Math.max(0, Math.ceil((p.sleepAt - Date.now()) / 60000))} min` : null
 
@@ -101,13 +102,17 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
         <button className="icon-btn" onClick={onClose} aria-label="Close">
           <IconDown />
         </button>
-        <span className="label">{song.album}</span>
-        <button className={`icon-btn ${showQueue ? 'active' : ''}`} onClick={() => setShowQueue((v) => !v)} aria-label="Queue">
-          <IconQueue />
-        </button>
+        <span className="label">{np.album}</span>
+        {x22 ? (
+          <button className={`icon-btn ${showQueue ? 'active' : ''}`} onClick={() => setShowQueue((v) => !v)} aria-label="Queue">
+            <IconQueue />
+          </button>
+        ) : (
+          <span className="icon-btn" aria-hidden />
+        )}
       </header>
 
-      {showQueue ? (
+      {showQueue && x22 ? (
         <div className="np-queue">
           <h2 className="label">Up next</h2>
           <TrackList songs={p.queue} />
@@ -120,67 +125,78 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
           onPointerLeave={g.onPointerLeave}
           onContextMenu={(e) => e.preventDefault()}
         >
-          <DitherImage src={api().coverUrl(song.coverArt, 800)} grid={128} className="np-art" alt={song.album} />
+          <DitherImage src={np.cover} grid={128} className="np-art" alt={np.album} />
           {g.flash && <span className="np-flash dot">{g.flash}</span>}
         </div>
       )}
 
       <div className="np-meta">
         <div className="np-text">
-          <h1 className="np-title">{song.title}</h1>
-          <p className="muted">{song.artist}</p>
+          <h1 className="np-title">{np.title}</h1>
+          <p className="muted">{np.artist}</p>
         </div>
-        <button className={`icon-btn ${song.starred ? 'liked' : ''}`} onClick={() => void p.toggleLike()} aria-label={song.starred ? 'Unlike' : 'Like'}>
-          <IconHeart filled={!!song.starred} />
-        </button>
+        {x22 && (
+          <button className={`icon-btn ${song.starred ? 'liked' : ''}`} onClick={() => void p.toggleLike()} aria-label={song.starred ? 'Unlike' : 'Like'}>
+            <IconHeart filled={!!song.starred} />
+          </button>
+        )}
       </div>
 
       <div className="np-seek">
         <input
           type="range"
           min={0}
-          max={p.duration || 1}
+          max={np.duration || 1}
           step={0.1}
-          value={scrub ?? p.time}
+          value={scrub ?? np.time}
+          disabled={!np.canSeek}
           onChange={(e) => setScrub(parseFloat(e.target.value))}
           onPointerUp={() => {
-            if (scrub !== null) p.seek(scrub)
+            if (scrub !== null) sourceActions.seek(scrub)
             setScrub(null)
           }}
           onKeyUp={() => {
-            if (scrub !== null) p.seek(scrub)
+            if (scrub !== null) sourceActions.seek(scrub)
             setScrub(null)
           }}
           aria-label="Seek"
         />
         <div className="row mono small muted">
-          <span>{fmtTime(scrub ?? p.time)}</span>
-          <span className={`badge badge-${badge.tier}`}>{badge.label}</span>
-          <span>-{fmtTime(Math.max(0, p.duration - (scrub ?? p.time)))}</span>
+          <span>{fmtTime(scrub ?? np.time)}</span>
+          {badge && <span className={`badge badge-${badge.tier}`}>{badge.label}</span>}
+          <span>-{fmtTime(Math.max(0, np.duration - (scrub ?? np.time)))}</span>
         </div>
       </div>
 
       <div className="np-controls">
-        <button className={`icon-btn ${p.shuffle ? 'active' : ''}`} onClick={p.toggleShuffle} aria-label="Shuffle" aria-pressed={p.shuffle}>
-          <IconShuffle />
-        </button>
-        <button className="icon-btn" onClick={p.prev} aria-label="Previous">
+        {x22 ? (
+          <button className={`icon-btn ${p.shuffle ? 'active' : ''}`} onClick={p.toggleShuffle} aria-label="Shuffle" aria-pressed={p.shuffle}>
+            <IconShuffle />
+          </button>
+        ) : (
+          <span className="icon-btn" aria-hidden />
+        )}
+        <button className="icon-btn" onClick={sourceActions.prev} aria-label="Previous">
           <IconPrev />
         </button>
-        <button className={`np-play ${p.buffering && p.playing ? 'pulse' : ''}`} onClick={p.toggle} aria-label={p.playing ? 'Pause' : 'Play'}>
-          {p.playing ? <IconPause width={30} height={30} /> : <IconPlay width={30} height={30} />}
+        <button className={`np-play ${np.buffering && np.playing ? 'pulse' : ''}`} onClick={sourceActions.toggle} aria-label={np.playing ? 'Pause' : 'Play'}>
+          {np.playing ? <IconPause width={30} height={30} /> : <IconPlay width={30} height={30} />}
         </button>
-        <button className="icon-btn" onClick={p.next} aria-label="Next">
+        <button className="icon-btn" onClick={sourceActions.next} aria-label="Next">
           <IconNext />
         </button>
-        <button
-          className={`icon-btn ${p.repeat !== 'off' ? 'active' : ''}`}
-          onClick={() => p.setRepeat(p.repeat === 'off' ? 'all' : p.repeat === 'all' ? 'one' : 'off')}
-          aria-label={`Repeat ${p.repeat}`}
-        >
-          <IconRepeat />
-          {p.repeat === 'one' && <span className="repeat-one mono">1</span>}
-        </button>
+        {x22 ? (
+          <button
+            className={`icon-btn ${p.repeat !== 'off' ? 'active' : ''}`}
+            onClick={() => p.setRepeat(p.repeat === 'off' ? 'all' : p.repeat === 'all' ? 'one' : 'off')}
+            aria-label={`Repeat ${p.repeat}`}
+          >
+            <IconRepeat />
+            {p.repeat === 'one' && <span className="repeat-one mono">1</span>}
+          </button>
+        ) : (
+          <span className="icon-btn" aria-hidden />
+        )}
       </div>
 
       <div className="np-foot">
@@ -191,7 +207,7 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
       </div>
       {showSleep && (
         <div className="chips sleep-chips">
-          {SLEEP_OPTIONS.map((o) => (
+          {SLEEP_OPTIONS.filter((o) => x22 || o.value !== 'track').map((o) => (
             <button
               key={o.label}
               className="chip"
@@ -205,7 +221,7 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
           ))}
         </div>
       )}
-      {p.error && <p className="error small">{p.error}</p>}
+      {np.error && <p className="error small">{np.error}</p>}
     </div>
   )
 }

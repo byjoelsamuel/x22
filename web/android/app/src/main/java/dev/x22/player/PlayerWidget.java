@@ -29,9 +29,12 @@ public class PlayerWidget extends AppWidgetProvider {
         RemoteViews v = new RemoteViews(ctx.getPackageName(), R.layout.widget_player);
         boolean hasTrack = NowPlayingStore.hasTrack(ctx);
         boolean playing = hasTrack && NowPlayingStore.isPlaying(ctx);
-        boolean live = NowPlayingPlugin.isAlive();
+        boolean external = NowPlayingStore.isExternal(ctx);
+        boolean live = external ? ExternalMedia.get(ctx).hasController() : NowPlayingPlugin.isAlive();
 
-        v.setTextViewText(R.id.widget_label, playing ? ctx.getString(R.string.widget_playing) : ctx.getString(R.string.widget_paused));
+        String label = playing ? ctx.getString(R.string.widget_playing) : ctx.getString(R.string.widget_paused);
+        if (external && !NowPlayingStore.app(ctx).isEmpty()) label = label + " · " + NowPlayingStore.app(ctx);
+        v.setTextViewText(R.id.widget_label, label);
         v.setTextViewText(R.id.widget_title, hasTrack ? NowPlayingStore.title(ctx) : ctx.getString(R.string.widget_idle_title));
         v.setTextViewText(R.id.widget_artist, hasTrack ? NowPlayingStore.artist(ctx) : ctx.getString(R.string.widget_idle_subtitle));
 

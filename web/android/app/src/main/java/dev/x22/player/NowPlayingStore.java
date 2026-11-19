@@ -20,13 +20,52 @@ final class NowPlayingStore {
         return ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
     }
 
+    static final String SOURCE_X22 = "x22";
+    static final String SOURCE_EXTERNAL = "external";
+
+    /** State from x22's own player (homelab). */
     static void save(Context ctx, String title, String artist, String album, boolean playing) {
         prefs(ctx).edit()
+            .putString("source", SOURCE_X22)
+            .putString("app", "")
             .putString("title", title)
             .putString("artist", artist)
             .putString("album", album)
             .putBoolean("playing", playing)
             .apply();
+    }
+
+    /** State mirrored from another app (YouTube Music, …). */
+    static void saveExternal(Context ctx, String title, String artist, String album, String app, boolean playing) {
+        prefs(ctx).edit()
+            .putString("source", SOURCE_EXTERNAL)
+            .putString("app", app)
+            .putString("title", title)
+            .putString("artist", artist)
+            .putString("album", album)
+            .putBoolean("playing", playing)
+            .apply();
+    }
+
+    static boolean isExternal(Context ctx) {
+        return SOURCE_EXTERNAL.equals(prefs(ctx).getString("source", SOURCE_X22));
+    }
+
+    static boolean isX22Playing(Context ctx) {
+        return !isExternal(ctx) && isPlaying(ctx) && hasTrack(ctx);
+    }
+
+    static String app(Context ctx) {
+        return prefs(ctx).getString("app", "");
+    }
+
+    /** "Dithered artwork" setting, mirrored so the widget can follow it without the app. */
+    static void setDitherPref(Context ctx, boolean dither) {
+        ctx.getSharedPreferences(PREFS + ".prefs", Context.MODE_PRIVATE).edit().putBoolean("dither", dither).apply();
+    }
+
+    static boolean ditherPref(Context ctx) {
+        return ctx.getSharedPreferences(PREFS + ".prefs", Context.MODE_PRIVATE).getBoolean("dither", true);
     }
 
     static void setPlaying(Context ctx, boolean playing) {

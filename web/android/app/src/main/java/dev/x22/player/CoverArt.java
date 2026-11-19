@@ -41,15 +41,19 @@ final class CoverArt {
             try (InputStream in = conn.getInputStream()) {
                 src = BitmapFactory.decodeStream(in);
             }
-            if (src == null) return null;
-            Bitmap square = centerCrop(src, dither ? GRID : SIZE);
-            Bitmap art = dither ? Bitmap.createScaledBitmap(ditherToRamp(square), SIZE, SIZE, false) : square;
-            return rounded(art, SIZE * 0.11f);
+            return src == null ? null : render(src, dither);
         } catch (Exception e) {
             return null;
         } finally {
             if (conn != null) conn.disconnect();
         }
+    }
+
+    /** Square-crop, optionally dither, round the corners — widget-ready. */
+    static Bitmap render(Bitmap src, boolean dither) {
+        Bitmap square = centerCrop(src, dither ? GRID : SIZE);
+        Bitmap art = dither ? Bitmap.createScaledBitmap(ditherToRamp(square), SIZE, SIZE, false) : square;
+        return rounded(art, SIZE * 0.11f);
     }
 
     private static Bitmap centerCrop(Bitmap src, int size) {
