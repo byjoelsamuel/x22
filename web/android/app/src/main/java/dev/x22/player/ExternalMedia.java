@@ -148,10 +148,17 @@ final class ExternalMedia implements MediaSessionManager.OnActiveSessionsChanged
         artDataUrl = null;
         if (controller != null) controller.registerCallback(callback, main);
         changed();
+        // The experimental EQ follows the followed app's audio session when it has one.
+        io.execute(() -> ExternalEq.get(ctx).apply());
     }
 
     boolean hasController() {
         return controller != null;
+    }
+
+    String followedPackage() {
+        MediaController c = controller;
+        return c == null ? null : c.getPackageName();
     }
 
     // ── State ─────────────────────────────────────────────────────────
@@ -186,6 +193,7 @@ final class ExternalMedia implements MediaSessionManager.OnActiveSessionsChanged
     JSObject snapshot(MediaController c, boolean includeArt) {
         JSObject o = new JSObject();
         o.put("active", c != null);
+        o.put("eqStatus", ExternalEq.get(ctx).status());
         if (c == null) return o;
         MediaMetadata m = c.getMetadata();
         PlaybackState s = c.getPlaybackState();

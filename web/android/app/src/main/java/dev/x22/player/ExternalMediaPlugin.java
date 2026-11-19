@@ -85,6 +85,25 @@ public class ExternalMediaPlugin extends Plugin implements ExternalMedia.Listene
         }
     }
 
+    /**
+     * Experimental EQ for other apps: { enabled, bands: [{cutoff, gain}], preamp, left, right }.
+     * Resolves { status: "off" | "global" | "attached:<package>" | "unsupported" }.
+     */
+    @PluginMethod
+    public void setEq(PluginCall call) {
+        boolean enabled = Boolean.TRUE.equals(call.getBoolean("enabled", false));
+        com.getcapacitor.JSArray bands = call.getArray("bands", new com.getcapacitor.JSArray());
+        double preamp = call.getDouble("preamp", 0d);
+        double left = call.getDouble("left", 0d);
+        double right = call.getDouble("right", 0d);
+        ExternalEq eq = ExternalEq.get(getContext());
+        new Thread(() -> {
+            JSObject o = new JSObject();
+            o.put("status", eq.configure(enabled, bands.toString(), preamp, left, right));
+            call.resolve(o);
+        }).start();
+    }
+
     /** Preferences the native widget needs when the web app is not running. */
     @PluginMethod
     public void setPrefs(PluginCall call) {
