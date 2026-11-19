@@ -1,4 +1,4 @@
-/* x22 — Nothing / CMF inspired: monochrome, dot-matrix type, one red accent. */
+/* x22 — Nothing / CMF inspired: monochrome base, dot-matrix type, pastel accents from the icon. */
 :root {
   --bg: #0a0a0a;
   --surface: #141414;
@@ -6,7 +6,12 @@
   --line: #2a2a2a;
   --text: #f2f2f2;
   --muted: #8a8a8a;
-  --accent: #d71921;
+  --accent: #ff6e8c;
+  --lav: #c9b8f0;
+  --peach: #ffcbb2;
+  --butter: #fff1ba;
+  --mint: #b2e8d0;
+  --sky: #b0d6f8;
   --radius: 22px;
   --dot: 'Doto', 'Space Mono', monospace;
   --sans: 'Space Grotesk', system-ui, sans-serif;
@@ -22,6 +27,9 @@
     --line: #dcdcda;
     --text: #0e0e0e;
     --muted: #6b6b6b;
+    --accent: #d93a5c;
+    --lav: #a58fe0;
+    --peach: #f2a07a;
     color-scheme: light;
   }
 }
@@ -32,6 +40,9 @@
   --line: #dcdcda;
   --text: #0e0e0e;
   --muted: #6b6b6b;
+  --accent: #d93a5c;
+  --lav: #a58fe0;
+  --peach: #f2a07a;
   color-scheme: light;
 }
 
@@ -55,3 +66,14 @@ button { font: inherit; color: inherit; }
 
 .dot { font-family: var(--dot); letter-spacing: 0.04em; }
 .mono { font-family: var(--mono); }
+
+.pill {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+.pill-solid { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
+.pill:disabled { opacity: 0.5; cursor: default; }
+:focus-visible { outline: 2px solid var(--lav); outline-offset: 2px; }

@@ -31,13 +31,3 @@
 .login-form input:focus { border-color: var(--text); }
 .login-error { color: var(--accent); margin: 0; font-size: 14px; }
 .login-note { color: var(--muted); font-size: 11px; margin-top: 24px; text-align: center; }
-
-.pill {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  border-radius: 999px;
-  padding: 12px 20px;
-  cursor: pointer;
-}
-.pill-solid { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 500; }
-.pill:disabled { opacity: 0.5; cursor: default; }
