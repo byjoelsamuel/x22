@@ -2,6 +2,8 @@ import { Capacitor, registerPlugin } from '@capacitor/core'
 import { api } from '../state/auth'
 import { usePlayer } from '../state/player'
 import { useSettings } from '../state/settings'
+import { activeSource } from '../state/source'
+import { setExternalPrefs, useExternal } from './external'
 
 /** Native side: web/android/app/src/main/java/dev/x22/player/NowPlayingPlugin.java */
 interface NowPlayingPlugin {
@@ -36,10 +38,20 @@ export function bindNativeNowPlaying() {
   void NowPlaying.addListener('action', ({ action }) => handleNativeAction(action))
 
   let last = ''
+  let lastDither: boolean | null = null
   const push = () => {
     const s = usePlayer.getState()
     const song = s.queue[s.index]
     const dither = useSettings.getState().ditherArt
+    if (dither !== lastDither) {
+      lastDither = dither
+      setExternalPrefs(dither)
+    }
+    // Another app is in charge: the native side drives the widget for it.
+    if (activeSource() === 'external') {
+      last = 'external'
+      return
+    }
     const key = song ? `${song.id}|${s.playing}|${dither}` : ''
     if (key === last) return
     last = key
@@ -58,5 +70,6 @@ export function bindNativeNowPlaying() {
   }
   usePlayer.subscribe(push)
   useSettings.subscribe(push)
+  useExternal.subscribe(push)
   push()
 }

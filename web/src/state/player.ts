@@ -2,8 +2,10 @@ import { create } from 'zustand'
 import type { Song } from '../api/types'
 import { getEngine } from '../audio/engine'
 import { api } from './auth'
+import { bindExternal, externalControl, useExternal } from '../native/external'
 import { bindNativeNowPlaying } from '../native/nowPlaying'
 import { bindMediaSession } from './mediaSession'
+import { bindSource } from './source'
 import { activeFilters, effectivePreamp, useSettings } from './settings'
 
 export type Repeat = 'off' | 'all' | 'one'
@@ -163,6 +165,8 @@ export const usePlayer = create<PlayerState>()((set, get) => ({
     const at = Date.now() + minutes * 60_000
     sleepTimer = setTimeout(() => {
       getEngine().pause()
+      // Also pause YouTube Music & co. when x22 is controlling them.
+      if (useExternal.getState().state?.playing) externalControl('pause')
       set({ sleepAt: null })
     }, minutes * 60_000)
     set({ sleepAt: at })
@@ -238,5 +242,7 @@ export function bindPlayer() {
   applyDsp()
   useSettings.subscribe(applyDsp)
   bindMediaSession()
+  bindExternal()
+  bindSource()
   bindNativeNowPlaying()
 }
