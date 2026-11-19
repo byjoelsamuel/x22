@@ -50,6 +50,9 @@ export interface SettingsState {
   ditherArt: boolean
   /** Experimental: apply the EQ to other apps (Android DynamicsProcessing). */
   eqOtherApps: boolean
+  /** Check GitHub for a newer x22 once a day (APK). */
+  autoUpdateCheck: boolean
+  lastUpdateCheck: number | null
   /** First-run welcome finished (or skipped). */
   onboarded: boolean
   /** Earbud-style gestures on the Now Playing artwork. */
@@ -87,6 +90,8 @@ export const useSettings = create<SettingsState>()(
       ditherArt: true,
       dynamicColor: true,
       onboarded: false,
+      autoUpdateCheck: true,
+      lastUpdateCheck: null,
       eqOtherApps: false,
       gestures: { tap: 'toggle', doubleTap: 'next', tripleTap: 'prev', hold: 'like' },
 

@@ -535,3 +535,8 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .check-warn .check-icon { color: var(--butter); }
 .check-fail .check-icon { color: var(--accent); }
 .check-hint { color: var(--peach); }
+
+/* ── Updates ─────────────────────────────────────── */
+.update-banner { border-color: color-mix(in srgb, var(--dyn) 50%, var(--line)); }
+.update-notes { white-space: pre-line; margin: 0; }
+.home > .update-banner { grid-column: 1 / -1; }
