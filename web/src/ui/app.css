@@ -394,3 +394,34 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .source-dot.ext { background: var(--accent); }
 .chip.on .source-dot { background: #1a1626; }
 .eq-hint { margin: 0; }
+
+/* ── Playlist import ─────────────────────────────── */
+.text-input, .field input {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  width: 100%;
+  outline: none;
+  resize: vertical;
+}
+.text-input:focus, .field input:focus { border-color: var(--lav); }
+.field { display: grid; gap: 6px; }
+.matches { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.match {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--mint);
+}
+.match-maybe { border-left-color: var(--butter); }
+.match-missing { border-left-color: var(--accent); }
+.match-src { display: grid; min-width: 0; }
+.match-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.match-pick { width: 100%; min-width: 0; }
+.buy a { color: var(--lav); }

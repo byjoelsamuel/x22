@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useEffect, useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { uploaderHealth, uploadFile, type UploadResult } from '../api/uploader'
 import { api, useAuth } from '../state/auth'
 import ConnectCard from './ConnectCard'
+import PlaylistImport from './PlaylistImport'
 import { IconUpload } from './icons'
 
 const AUDIO = /\.(flac|mp3|m4a|aac|alac|ogg|oga|opus|wav|aiff?|wv|ape|dsf|dff)$/i
@@ -31,10 +32,35 @@ export default function Import({ onLibraryChanged }: { onLibraryChanged: () => v
       </div>
     )
   }
-  return <Uploader onLibraryChanged={onLibraryChanged} />
+  return <ImportTabs onLibraryChanged={onLibraryChanged} />
 }
 
-function Uploader({ onLibraryChanged }: { onLibraryChanged: () => void }) {
+/** Files (upload) or Playlists (rebuild YouTube Music playlists from the library). */
+function ImportTabs({ onLibraryChanged }: { onLibraryChanged: () => void }) {
+  const [tab, setTab] = useState<'files' | 'playlists'>('files')
+  const tabs = (
+    <div className="segmented" role="tablist" aria-label="Import">
+      {(['files', 'playlists'] as const).map((t) => (
+        <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>
+          {t === 'files' ? 'Files' : 'Playlists'}
+        </button>
+      ))}
+    </div>
+  )
+  return tab === 'files' ? (
+    <Uploader onLibraryChanged={onLibraryChanged} tabs={tabs} />
+  ) : (
+    <div className="page">
+      <header className="page-head">
+        <h1 className="dot page-title">Import</h1>
+      </header>
+      {tabs}
+      <PlaylistImport />
+    </div>
+  )
+}
+
+function Uploader({ onLibraryChanged, tabs }: { onLibraryChanged: () => void; tabs: ReactNode }) {
   const creds = useAuth((s) => s.creds)!
   const [items, setItems] = useState<Item[]>([])
   const [phase, setPhase] = useState<Phase>('idle')
@@ -106,6 +132,7 @@ function Uploader({ onLibraryChanged }: { onLibraryChanged: () => void }) {
       <header className="page-head">
         <h1 className="dot page-title">Import</h1>
       </header>
+      {tabs}
 
       {online === false && (
         <div className="card warn">
