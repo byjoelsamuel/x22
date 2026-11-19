@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Album, AlbumListType, Artist, Playlist, Song } from '../api/types'
 import { useApi, useAuth } from '../state/auth'
+import { useBack } from '../state/back'
 import { usePlayer } from '../state/player'
 import ConnectCard from './ConnectCard'
 import DitherImage from './DitherImage'
@@ -70,6 +71,8 @@ function LibraryBrowser({ refreshKey }: { refreshKey: number }) {
   const view = stack[stack.length - 1]
   const push = (v: View) => setStack((s) => [...s, v])
   const pop = () => setStack((s) => (s.length > 1 ? s.slice(0, -1) : s))
+  useBack(!!query, () => setQuery(''))
+  useBack(stack.length > 1, pop)
 
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query.trim()), 300)

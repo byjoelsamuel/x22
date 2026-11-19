@@ -104,7 +104,7 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
         </div>
       </section>
 
-      <section className="card">
+      <section className="card mode-card">
         <div className="card-head">
           <h2 className="label">Sound mode</h2>
         </div>
@@ -127,7 +127,7 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
         </div>
       </section>
 
-      <section className="card">
+      <section className="card eq-card">
         <div className="card-head">
           <h2 className="label">Equaliser</h2>
           <Switch on={s.eqEnabled} onChange={(v) => s.set({ eqEnabled: v })} label="Equaliser" />
@@ -189,7 +189,7 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
         </div>
       </section>
 
-      <section className="card">
+      <section className="card fine-card">
         <div className="card-head">
           <h2 className="label">Fine tune</h2>
         </div>
