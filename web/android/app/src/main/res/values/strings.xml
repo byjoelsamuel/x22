@@ -7,8 +7,6 @@
     <string name="widget_name">x22 player</string>
     <string name="widget_description">Cover art with previous, play/pause and next</string>
     <string name="widget_cover">Album art — open x22</string>
-    <string name="widget_playing">Now playing</string>
-    <string name="widget_paused">Paused</string>
     <string name="widget_idle_title">x22</string>
     <string name="widget_idle_subtitle">Tap to start listening</string>
     <string name="action_prev">Previous</string>
