@@ -1,31 +1,115 @@
-# x22
+<p align="center">
+  <img src="web/public/icons/icon-192.png" width="96" alt="x22 icon" />
+</p>
 
-A minimal, earbud-app-style music player for [Navidrome](https://www.navidrome.org/).
-It supports lossless and hi-res audio, has a 10-band EQ on the home screen, and uses a
-dithered Nothing/CMF-inspired look.
+<h1 align="center">x22</h1>
 
-> Work in progress. Features land in small PRs.
+<p align="center">
+  A minimal, earbud-app-style music player for <a href="https://www.navidrome.org/">Navidrome</a>.<br/>
+  Lossless and hi-res, a 10-band EQ on the home screen, IEM tuning, and a dithered pastel look.
+</p>
+
+---
+
+## Features
+
+| | |
+| --- | --- |
+| **Lossless & hi-res** | Streams the original file (`format=raw`), so FLAC, ALAC, WAV and AIFF at any bit depth or sample rate play untouched. The audio output opens at the track's sample rate when the device allows it. A quality badge shows what's playing (e.g. `FLAC 24/96`). |
+| **EQ on the home screen** | 10 bands you can drag, presets (Balanced, More bass, Voice, More treble, IEM warm, Late night), custom presets, and an auto preamp so nothing clips. |
+| **IEM support** | Import an [AutoEq](https://autoeq.app) `ParametricEQ.txt` for your IEMs. Crossfeed, balance and mono are included too. |
+| **Earbud-app features** | Sound modes, tap / double / triple / hold gestures on the artwork, a sleep timer, lock-screen and Bluetooth-button controls, and near-gapless playback. |
+| **Dither** | Pastel Bayer-dithered artwork and optional TPDF audio dither (16 or 24-bit). |
+| **Import from the app** | Upload songs from your phone or PC. They're filed into `Uploads/Artist/Album/` by their tags, and Navidrome rescans automatically. |
+| **Installable** | Installs as a PWA over HTTPS, or as an Android APK built by GitHub Actions. |
+
+## How it fits together
+
+```
+phone / PC / APK ──HTTPS──▶ Caddy (homelab laptop, mkcert cert)
+                              ├─ /         x22 app
+                              ├─ /rest/*   ──▶ Navidrome :4533
+                              └─ /api/*    ──▶ uploader ──▶ music folder ──▶ Navidrome rescan
+```
+
+## Set up on the homelab
+
+You need Docker and Docker Compose, an existing Navidrome, and [mkcert](https://github.com/FiloSottile/mkcert).
+
+1. **Make the certificate.** Follow [`deploy/certs/README.md`](deploy/certs/README.md), then trust the CA on your phone.
+2. **Configure:**
+
+   ```bash
+   cd deploy && cp .env.example .env
+   ```
+
+   Edit `.env`. At minimum set `MUSIC_DIR` (the folder Navidrome scans) and `PUID`/`PGID` (its owner, from `id`).
+3. **Start:**
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+4. Open **https://192.168.0.100** and log in with your Navidrome account. Leave *Server* empty.
+5. **Install:** in Chrome, use *⋮ → Install app*; in Safari, use *Share → Add to Home Screen*.
+
+To rescan after uploads, your Navidrome user must be an admin. Otherwise, new songs show up on Navidrome's next scheduled scan.
+
+## Android app
+
+Every push to `main` builds a debug APK. Download it from **Actions → Android → Artifacts**. Version tags (`v1.0.0`) attach APKs to a GitHub Release.
+
+1. Install the APK. Android will ask you to allow installs from your browser or file manager.
+2. Install the mkcert CA on the phone (step 1 above).
+3. Open x22 and set *Server* to `https://192.168.0.100`.
+
+**Signed release builds (optional):** create a keystore once, keep it safe, and add four repository secrets.
+
+```bash
+keytool -genkey -v -keystore x22.jks -alias x22 -keyalg RSA -keysize 2048 -validity 10000
+```
+
+```bash
+base64 -w0 x22.jks
+```
+
+| Secret | Value |
+| --- | --- |
+| `X22_KEYSTORE_BASE64` | output of the `base64` command above |
+| `X22_KEYSTORE_PASSWORD` | keystore password |
+| `X22_KEY_ALIAS` | `x22` |
+| `X22_KEY_PASSWORD` | key password |
+
+Build locally with the Android SDK and JDK 21:
+
+```bash
+cd web && npm run android:apk
+```
 
 ## Develop
 
 ```bash
-cd web
-npm install
-npm run dev
+cd web && npm install && npm run dev
 ```
 
-The dev server proxies `/rest` to Navidrome and `/api` to the uploader. Override the targets
-with `NAVIDROME_URL` / `UPLOADER_URL` in `web/.env.local`:
+Point the dev server at your servers in `web/.env.local`:
 
 ```
 NAVIDROME_URL=http://192.168.0.100:4533
+UPLOADER_URL=http://192.168.0.100:4600
 ```
 
-## Scripts
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Dev server on your LAN |
+| `npm test` | Unit tests (web: Vitest, uploader: `node --test`) |
+| `npm run lint` | ESLint |
+| `npm run build` | Production build + service worker |
+| `python3 scripts/make-icon.py` | Regenerate the dithered icons (`--android <res>` for Android) |
 
-| Command          | What it does            |
-| ---------------- | ----------------------- |
-| `npm run dev`    | Dev server on your LAN  |
-| `npm test`       | Unit tests (Vitest)     |
-| `npm run lint`   | ESLint                  |
-| `npm run build`  | Production build        |
+## Troubleshooting
+
+- **"Install app" doesn't appear.** The page must be HTTPS with a trusted cert. Check the padlock, and install the mkcert CA on that device.
+- **Dither options are greyed out.** The audio dither needs HTTPS (it runs in an AudioWorklet).
+- **A track won't play on iPhone.** Safari can't decode some formats (e.g. Opus in older iOS, APE, WavPack). Pick a bitrate cap in *Settings → Streaming quality* so Navidrome transcodes.
+- **The Import tab says the uploader isn't reachable.** Run `docker compose ps` and `docker compose logs uploader`.
