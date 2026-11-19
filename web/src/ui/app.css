@@ -525,3 +525,13 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ── Playback check ──────────────────────────────── */
+.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.check { display: grid; grid-template-columns: 20px 1fr; gap: 8px; align-items: start; }
+.check > span:last-child { display: grid; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.check-icon { font-family: var(--mono); font-weight: 700; text-align: center; }
+.check-pass .check-icon { color: var(--mint); }
+.check-warn .check-icon { color: var(--butter); }
+.check-fail .check-icon { color: var(--accent); }
+.check-hint { color: var(--peach); }
