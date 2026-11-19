@@ -17,6 +17,7 @@
 
 | | |
 | --- | --- |
+| **Works with your player** | *(Android)* Keep listening in **YouTube Music**, or any other player, and see, skip and seek it from x22, its home-screen widget and gestures. x22 follows whatever is playing, and you can pin a source from the chip on Home. Grant **Notification access** once; x22 only uses it for media sessions. |
 | **Homelab is optional** | x22 works without a server. Connect Navidrome whenever you like, from onboarding, Settings, or the Library and Import tabs. |
 | **Lossless & hi-res** | Streams the original file (`format=raw`), so FLAC, ALAC, WAV and AIFF at any bit depth or sample rate play untouched. The audio output opens at the track's sample rate when the device allows it. A quality badge shows what's playing (e.g. `FLAC 24/96`). |
 | **EQ on the home screen** | 10 bands you can drag, presets (Balanced, More bass, Voice, More treble, IEM warm, Late night), custom presets, and an auto preamp so nothing clips. |

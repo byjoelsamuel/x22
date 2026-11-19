@@ -1,36 +1,32 @@
-import { api } from '../state/auth'
-import { usePlayer } from '../state/player'
+import { sourceActions, useNowPlaying } from '../state/source'
 import DitherImage from './DitherImage'
 import { IconNext, IconPause, IconPlay } from './icons'
 
 export default function MiniPlayer({ onOpen }: { onOpen: () => void }) {
-  const song = usePlayer((p) => p.queue[p.index])
-  const playing = usePlayer((p) => p.playing)
-  const buffering = usePlayer((p) => p.buffering)
-  const time = usePlayer((p) => p.time)
-  const duration = usePlayer((p) => p.duration)
-  const error = usePlayer((p) => p.error)
-  if (!song) return null
-  const pct = duration ? (time / duration) * 100 : 0
+  const np = useNowPlaying(120)
+  if (!np) return null
+  const pct = np.duration ? (np.time / np.duration) * 100 : 0
 
   return (
     <div className="mini" role="region" aria-label="Player">
       <div className="mini-progress" style={{ width: `${pct}%` }} />
       <button className="mini-main" onClick={onOpen} aria-label="Open player">
-        <DitherImage src={api().coverUrl(song.coverArt, 120)} grid={40} className="mini-art" />
+        <DitherImage src={np.cover} grid={40} className="mini-art" />
         <span className="mini-text">
-          <strong>{song.title}</strong>
-          <span className={error ? 'error small' : 'muted small'}>{error ?? song.artist}</span>
+          <strong>{np.title}</strong>
+          <span className={np.error ? 'error small' : 'muted small'}>
+            {np.error ?? (np.isX22 ? np.artist : [np.artist, np.badge?.label.toLowerCase()].filter(Boolean).join(' · '))}
+          </span>
         </span>
       </button>
       <button
-        className={`icon-btn ${buffering && playing ? 'pulse' : ''}`}
-        aria-label={playing ? 'Pause' : 'Play'}
-        onClick={() => usePlayer.getState().toggle()}
+        className={`icon-btn ${np.buffering && np.playing ? 'pulse' : ''}`}
+        aria-label={np.playing ? 'Pause' : 'Play'}
+        onClick={sourceActions.toggle}
       >
-        {playing ? <IconPause /> : <IconPlay />}
+        {np.playing ? <IconPause /> : <IconPlay />}
       </button>
-      <button className="icon-btn" aria-label="Next" onClick={() => usePlayer.getState().next()}>
+      <button className="icon-btn" aria-label="Next" onClick={sourceActions.next}>
         <IconNext />
       </button>
     </div>

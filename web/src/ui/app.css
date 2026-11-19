@@ -386,3 +386,10 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .connect-card-inner .pill { margin-top: 6px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .hero-actions .pill { padding: 10px 16px; }
+
+/* ── Source chip ─────────────────────────────────── */
+.home-head-right { display: flex; align-items: center; gap: 8px; }
+.source-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-family: var(--mono); }
+.source-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lav); }
+.source-dot.ext { background: var(--accent); }
+.chip.on .source-dot { background: #1a1626; }

@@ -1,6 +1,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { parseAutoEq } from '../audio/eq'
 import { useAuth } from '../state/auth'
+import { openAccessSettings, openExternalApp, useExternal } from '../native/external'
 import { disconnectHomelab, useUi } from '../state/ui'
 import { GESTURE_ACTIONS, useSettings, type GestureAction, type SettingsState } from '../state/settings'
 import { Switch } from './Home'
@@ -16,6 +17,7 @@ export default function Settings() {
   const s = useSettings()
   const creds = useAuth((a) => a.creds)
   const openConnect = useUi((u) => u.openConnect)
+  const ext = useExternal()
   const [profileError, setProfileError] = useState<string | null>(null)
   const secure = typeof window !== 'undefined' && window.isSecureContext
 
@@ -37,6 +39,29 @@ export default function Settings() {
       <header className="page-head">
         <h1 className="dot page-title">Settings</h1>
       </header>
+
+      {ext.available && (
+        <section className="card">
+          <h2 className="label">Other apps</h2>
+          <p className="muted small">
+            Follow and control YouTube Music (or whatever is playing) from x22 and its widget.
+          </p>
+          <Row
+            label={ext.granted ? 'Access granted' : 'Notification access'}
+            hint={ext.granted ? (ext.state?.active ? `Following ${ext.state.app}` : 'Nothing playing in other apps') : 'Needed to see other players'}
+          >
+            {ext.granted ? (
+              <button className="pill" onClick={() => void openExternalApp()}>
+                Open YT Music
+              </button>
+            ) : (
+              <button className="pill pill-solid" onClick={() => void openAccessSettings()}>
+                Grant
+              </button>
+            )}
+          </Row>
+        </section>
+      )}
 
       <section className="card">
         <h2 className="label">Streaming quality</h2>
