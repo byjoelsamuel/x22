@@ -492,3 +492,36 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
   .page-title { font-size: 28px; }
   .np-play { width: 60px; height: 60px; }
 }
+
+/* ── Dynamic colour & motion ─────────────────────── */
+:root { --dyn: var(--lav); }
+.np-play { background: var(--dyn); color: #1a1626; transition: background 0.6s ease; }
+.mini-progress { background: var(--dyn); transition: width 0.25s linear, background 0.6s ease; }
+.np-seek input[type='range'] { accent-color: var(--dyn); }
+.np::before {
+  content: '';
+  position: fixed;
+  inset: -20% -20% auto;
+  height: 70%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--dyn) 28%, transparent), transparent);
+  pointer-events: none;
+  z-index: -1;
+  transition: background 0.6s ease;
+}
+.np { isolation: isolate; }
+.hero { border-color: color-mix(in srgb, var(--dyn) 35%, var(--line)); transition: border-color 0.6s ease; }
+
+.mini { touch-action: pan-y; transition: transform 0.2s ease; }
+.np { touch-action: pan-x pinch-zoom; transition: transform 0.2s ease, opacity 0.2s ease; }
+
+.tab-view { animation: tab-in 0.22s ease-out; }
+@keyframes tab-in { from { opacity: 0; transform: translateY(6px); } }
+
+.pill, .chip, .icon-btn, .np-play, .tile, .segmented button, .hero, .nav button {
+  transition: transform 0.12s ease, background 0.2s, color 0.2s, border-color 0.2s;
+}
+.pill:active, .chip:active, .icon-btn:active, .np-play:active, .tile:active, .hero:active, .nav button:active { transform: scale(0.96); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
