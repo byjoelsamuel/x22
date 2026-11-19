@@ -74,6 +74,7 @@ public class PlaybackService extends Service {
             @Override public void onStop() { NowPlayingPlugin.dispatch("pause"); }
             @Override public void onSkipToNext() { NowPlayingPlugin.dispatch("next"); }
             @Override public void onSkipToPrevious() { NowPlayingPlugin.dispatch("prev"); }
+            @Override public void onSeekTo(long pos) { NowPlayingPlugin.dispatchSeek(pos); }
         });
         session.setSessionActivity(MediaActionReceiver.openApp(this));
         session.setActive(true);
@@ -92,15 +93,19 @@ public class PlaybackService extends Service {
         MediaMetadataCompat.Builder meta = new MediaMetadataCompat.Builder()
             .putString(MediaMetadataCompat.METADATA_KEY_TITLE, NowPlayingStore.title(this))
             .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, NowPlayingStore.artist(this))
-            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, NowPlayingStore.album(this));
+            .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, NowPlayingStore.album(this))
+            // Without a duration the lock screen shows no progress bar at all.
+            .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, NowPlayingStore.duration(this));
         if (cover != null) meta.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, cover);
         session.setMetadata(meta.build());
         session.setPlaybackState(new PlaybackStateCompat.Builder()
             .setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE
                 | PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_STOP)
+                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS | PlaybackStateCompat.ACTION_STOP
+                // ACTION_SEEK_TO is what makes the lock-screen bar draggable.
+                | PlaybackStateCompat.ACTION_SEEK_TO)
             .setState(playing ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED,
-                PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, playing ? 1f : 0f)
+                NowPlayingStore.position(this), playing ? 1f : 0f)
             .build());
 
         Notification n = new NotificationCompat.Builder(this, CHANNEL)

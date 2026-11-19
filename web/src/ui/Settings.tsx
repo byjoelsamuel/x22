@@ -167,6 +167,9 @@ export default function Settings() {
               <Row label="Dynamic colour" hint="Tint the player with a colour from the album art">
           <Switch on={s.dynamicColor} onChange={(v) => s.set({ dynamicColor: v })} label="Dynamic colour" />
         </Row>
+        <Row label="Visualizer" hint="Bars in the player and on the home-screen widget">
+          <Switch on={s.visualizer} onChange={(v) => s.set({ visualizer: v })} label="Visualizer" />
+        </Row>
       </section>
 
       <Updates />

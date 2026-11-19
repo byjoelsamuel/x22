@@ -1,5 +1,6 @@
 import ditherUrl from './dither.worklet.ts?worker&url'
 import type { Filter } from './eq'
+import { Spectrum } from './visualizer'
 import { explainStall, StallWatchdog } from './watchdog'
 
 /**
@@ -44,6 +45,10 @@ export class AudioEngine {
   private readonly safe: HTMLAudioElement
   private safeActive = false
   private readonly watchdog = new StallWatchdog()
+  /** Bumped on every play(); a superseded attempt stops itself instead of starting. */
+  private playToken = 0
+  /** Spectrum tap for the visualizer (reads the final mix; does not alter it). */
+  readonly spectrum = new Spectrum()
 
   ctx: AudioContext | null = null
   private input!: GainNode
@@ -185,6 +190,7 @@ export class AudioEngine {
     }
 
     this.rewire()
+    this.spectrum.attach(ctx, this.volume)
     this.setDsp({}) // builds filter nodes for settings applied before the context existed
   }
 
@@ -201,6 +207,8 @@ export class AudioEngine {
     tail.push(this.volume, this.ctx.destination)
     for (const n of [this.xfOut, this.monoNode, this.balance, this.dither, this.volume]) n?.disconnect()
     for (let i = 0; i < tail.length - 1; i++) tail[i].connect(tail[i + 1])
+    // The disconnect() above also drops the visualizer tap; put it back.
+    this.spectrum.reconnect(this.volume)
   }
 
   /** Apply EQ / DSP settings. Cheap to call often; rebuilds filters only when the count changes. */
@@ -249,35 +257,46 @@ export class AudioEngine {
       // No usable Web Audio on this device: play without the EQ.
       return this.fallBackToSafe(url, opts.startAt)
     }
+    const token = ++this.playToken
     const el = this.current
-    this.standby.pause()
     if (this.standby.src === url) {
-      // Already preloaded — just swap.
+      // Already preloaded (the usual case when you press Next) — swap to it.
       this.active = 1 - this.active
     } else if (el.src !== url) {
       el.src = url
     }
     const target = this.current
+    // Silence everything else first, or the outgoing track keeps playing underneath.
+    this.pauseAllExcept(target)
     if (opts.startAt) target.currentTime = opts.startAt
     this.events.onBuffering?.(true)
     this.watchdog.arm(() => this.fallBackToSafe(url, opts.startAt))
     try {
       await target.play()
+      // A newer play() started while this one was awaiting: don't leave two running.
+      if (token !== this.playToken) target.pause()
     } catch (e) {
       const name = (e as DOMException).name
-      if (name === 'AbortError') return
+      if (name === 'AbortError' || token !== this.playToken) return
       if (name === 'NotSupportedError') return this.fallBackToSafe(url, opts.startAt)
       this.watchdog.cancel()
       this.events.onError?.(String((e as Error).message))
     }
   }
 
+  /** Exactly one element may ever be playing. */
+  private pauseAllExcept(keep: HTMLAudioElement | null) {
+    for (const el of [this.els[0], this.els[1], this.safe]) {
+      if (el !== keep && !el.paused) el.pause()
+    }
+  }
+
   /** Retry the track on the plain element (no EQ). If that stalls too, explain why. */
   private fallBackToSafe(url: string, startAt?: number) {
     if (this.safeActive) return
-    for (const el of this.els) el.pause()
     this.safeActive = true
     const el = this.safe
+    this.pauseAllExcept(el)
     el.src = url
     if (startAt) el.currentTime = startAt
     this.events.onNotice?.('EQ off for this track')
@@ -343,6 +362,8 @@ export class AudioEngine {
     if (this.nextUrl && sb.src === this.nextUrl) {
       this.active = 1 - this.active
       this.nextUrl = null
+      this.playToken++
+      this.pauseAllExcept(sb)
       void sb.play()
       this.events.onEnded?.(true)
     } else {

@@ -44,6 +44,8 @@ export interface SettingsState {
   maxBitRate: number
   matchSampleRate: boolean
   theme: 'system' | 'dark' | 'light'
+  /** Bar visualizer in the player and on the widget. */
+  visualizer: boolean
   /** Tint the player with a colour taken from the album art. */
   dynamicColor: boolean
   /** Pastel dithered artwork (otherwise the original cover). */
@@ -89,6 +91,7 @@ export const useSettings = create<SettingsState>()(
       theme: 'system',
       ditherArt: true,
       dynamicColor: true,
+      visualizer: true,
       onboarded: false,
       autoUpdateCheck: true,
       lastUpdateCheck: null,

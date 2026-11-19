@@ -3,11 +3,14 @@ package dev.x22.player;
 import android.content.Context;
 import android.graphics.Bitmap;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import org.json.JSONException;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -46,6 +49,17 @@ public class NowPlayingPlugin extends Plugin {
         return instance != null;
     }
 
+    /** Forward a lock-screen seek (milliseconds) to the web player. */
+    static boolean dispatchSeek(long positionMs) {
+        NowPlayingPlugin p = instance;
+        if (p == null) return false;
+        JSObject data = new JSObject();
+        data.put("action", "seek");
+        data.put("position", positionMs);
+        p.notifyListeners("action", data);
+        return true;
+    }
+
     /** Forward a control ("toggle", "play", "pause", "next", "prev") to the web player. */
     static boolean dispatch(String action) {
         NowPlayingPlugin p = instance;
@@ -64,9 +78,12 @@ public class NowPlayingPlugin extends Plugin {
         final String cover = call.getString("cover");
         final boolean playing = Boolean.TRUE.equals(call.getBoolean("playing", false));
         final boolean dither = Boolean.TRUE.equals(call.getBoolean("dither", true));
+        final long position = call.getLong("position", 0L);
+        final long duration = call.getLong("duration", 0L);
         final Context ctx = getContext().getApplicationContext();
 
         NowPlayingStore.setDitherPref(ctx, dither);
+        NowPlayingStore.savePosition(ctx, position, duration);
         io.execute(() -> {
             String coverKey = cover == null ? null : cover + "|" + dither;
             // Re-render when the track changed or another app's cover is in the widget.
@@ -79,6 +96,24 @@ public class NowPlayingPlugin extends Plugin {
             PlayerWidget.updateAll(ctx);
             PlaybackService.sync(ctx);
         });
+        call.resolve();
+    }
+
+    /**
+     * Visualizer levels (0-1, one per bar) pushed by the web player a few times a second
+     * while music plays. Held in memory only, never written to disk.
+     */
+    @PluginMethod
+    public void levels(PluginCall call) {
+        JSArray arr = call.getArray("levels", new JSArray());
+        float[] out = new float[arr.length()];
+        try {
+            for (int i = 0; i < arr.length(); i++) out[i] = (float) arr.getDouble(i);
+        } catch (JSONException e) {
+            call.resolve();
+            return;
+        }
+        PlayerWidget.setLevels(getContext().getApplicationContext(), out);
         call.resolve();
     }
 

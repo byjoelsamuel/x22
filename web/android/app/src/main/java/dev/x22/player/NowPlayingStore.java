@@ -23,6 +23,27 @@ final class NowPlayingStore {
     static final String SOURCE_X22 = "x22";
     static final String SOURCE_EXTERNAL = "external";
 
+    /** Where the track is, for the lock-screen seek bar. Milliseconds. */
+    static void savePosition(Context ctx, long positionMs, long durationMs) {
+        prefs(ctx).edit()
+            .putLong("position", positionMs)
+            .putLong("duration", durationMs)
+            .putLong("positionAt", System.currentTimeMillis())
+            .apply();
+    }
+
+    static long duration(Context ctx) {
+        return prefs(ctx).getLong("duration", 0L);
+    }
+
+    /** Position extrapolated to now, so the lock-screen bar is not stale. */
+    static long position(Context ctx) {
+        long pos = prefs(ctx).getLong("position", 0L);
+        if (isPlaying(ctx)) pos += System.currentTimeMillis() - prefs(ctx).getLong("positionAt", System.currentTimeMillis());
+        long dur = duration(ctx);
+        return dur > 0 ? Math.max(0, Math.min(pos, dur)) : Math.max(0, pos);
+    }
+
     /** State from x22's own player (homelab). */
     static void save(Context ctx, String title, String artist, String album, boolean playing) {
         prefs(ctx).edit()
