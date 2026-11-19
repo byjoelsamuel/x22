@@ -43,7 +43,10 @@ export default function MiniPlayer({ onOpen }: { onOpen: () => void }) {
         <span className="mini-text">
           <strong>{np.title}</strong>
           <span className={np.error ? 'error small' : 'muted small'}>
-            {np.error ?? (np.isX22 ? np.artist : [np.artist, np.badge?.label.toLowerCase()].filter(Boolean).join(' · '))}
+            {np.error ??
+              (np.isX22
+                ? [np.artist, np.notice].filter(Boolean).join(' · ')
+                : [np.artist, np.badge?.label.toLowerCase()].filter(Boolean).join(' · '))}
           </span>
         </span>
       </button>

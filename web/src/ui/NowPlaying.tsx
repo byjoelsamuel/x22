@@ -247,6 +247,7 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
         </div>
       )}
       {np.error && <p className="error small">{np.error}</p>}
+      {!np.error && np.notice && <p className="muted small center">{np.notice}</p>}
     </div>
   )
 }

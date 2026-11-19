@@ -1,5 +1,6 @@
 import ditherUrl from './dither.worklet.ts?worker&url'
 import type { Filter } from './eq'
+import { explainStall, StallWatchdog } from './watchdog'
 
 /**
  * Audio graph:
@@ -28,6 +29,8 @@ export interface EngineEvents {
   onEnded?: (advancedToNext: boolean) => void
   onError?: (message: string) => void
   onBuffering?: (buffering: boolean) => void
+  /** Non-fatal note for the UI (e.g. "EQ off for this track"), or null to clear. */
+  onNotice?: (message: string | null) => void
 }
 
 const dbToGain = (db: number) => Math.pow(10, db / 20)
@@ -37,6 +40,10 @@ export class AudioEngine {
   readonly els: [HTMLAudioElement, HTMLAudioElement]
   private active = 0
   private nextUrl: string | null = null
+  /** Plain <audio> outside Web Audio, used when a stream won't play through the EQ graph. */
+  private readonly safe: HTMLAudioElement
+  private safeActive = false
+  private readonly watchdog = new StallWatchdog()
 
   ctx: AudioContext | null = null
   private input!: GainNode
@@ -61,14 +68,21 @@ export class AudioEngine {
   }
 
   constructor() {
-    this.els = [this.makeElement(), this.makeElement()]
+    this.els = [this.makeElement(true), this.makeElement(true)]
+    this.safe = this.makeElement(false)
   }
 
-  private makeElement(): HTMLAudioElement {
+  private makeElement(viaWebAudio: boolean): HTMLAudioElement {
     const el = new Audio()
-    el.crossOrigin = 'anonymous' // needed for Web Audio when Navidrome is another origin (APK)
+    // Web Audio needs CORS-clean media when Navidrome is another origin (APK). The safe
+    // element skips both, so it plays even when the server sends no CORS headers.
+    if (viaWebAudio) el.crossOrigin = 'anonymous'
     el.preload = 'auto'
+    const progressed = () => {
+      if (el === this.current && el.currentTime > 0) this.watchdog.started()
+    }
     el.addEventListener('timeupdate', () => {
+      progressed()
       if (el === this.current) this.events.onTime?.(el.currentTime, el.duration || 0)
     })
     el.addEventListener('durationchange', () => {
@@ -76,6 +90,7 @@ export class AudioEngine {
     })
     el.addEventListener('playing', () => {
       if (el === this.current) {
+        this.watchdog.started()
         this.events.onBuffering?.(false)
         this.events.onPlaying?.(true)
       }
@@ -90,13 +105,17 @@ export class AudioEngine {
       if (el === this.current) this.handleEnded()
     })
     el.addEventListener('error', () => {
-      if (el === this.current && el.src) this.events.onError?.(mediaError(el.error))
+      if (el !== this.current || !el.src) return
+      // Through the EQ graph first; if that element can't load the stream, try the safe one.
+      if (viaWebAudio && !this.safeActive) return this.fallBackToSafe(el.src)
+      this.watchdog.cancel()
+      this.events.onError?.(mediaError(el.error, el.src))
     })
     return el
   }
 
   get current(): HTMLAudioElement {
-    return this.els[this.active]
+    return this.safeActive ? this.safe : this.els[this.active]
   }
   private get standby(): HTMLAudioElement {
     return this.els[1 - this.active]
@@ -222,7 +241,14 @@ export class AudioEngine {
 
   /** Load and play a track. `sampleRate` is used once, to open the context at the source rate. */
   async play(url: string, opts: { sampleRate?: number; startAt?: number } = {}) {
-    await this.ensureContext(opts.sampleRate)
+    this.leaveSafe()
+    this.events.onNotice?.(null)
+    try {
+      await this.ensureContext(opts.sampleRate)
+    } catch {
+      // No usable Web Audio on this device: play without the EQ.
+      return this.fallBackToSafe(url, opts.startAt)
+    }
     const el = this.current
     this.standby.pause()
     if (this.standby.src === url) {
@@ -234,11 +260,46 @@ export class AudioEngine {
     const target = this.current
     if (opts.startAt) target.currentTime = opts.startAt
     this.events.onBuffering?.(true)
+    this.watchdog.arm(() => this.fallBackToSafe(url, opts.startAt))
     try {
       await target.play()
     } catch (e) {
-      if ((e as DOMException).name !== 'AbortError') this.events.onError?.(String((e as Error).message))
+      const name = (e as DOMException).name
+      if (name === 'AbortError') return
+      if (name === 'NotSupportedError') return this.fallBackToSafe(url, opts.startAt)
+      this.watchdog.cancel()
+      this.events.onError?.(String((e as Error).message))
     }
+  }
+
+  /** Retry the track on the plain element (no EQ). If that stalls too, explain why. */
+  private fallBackToSafe(url: string, startAt?: number) {
+    if (this.safeActive) return
+    for (const el of this.els) el.pause()
+    this.safeActive = true
+    const el = this.safe
+    el.src = url
+    if (startAt) el.currentTime = startAt
+    this.events.onNotice?.('EQ off for this track')
+    this.events.onBuffering?.(true)
+    this.watchdog.arm(() => {
+      this.events.onBuffering?.(false)
+      this.events.onError?.(explainStall(location.protocol, url))
+    })
+    void el.play().catch((e: Error) => {
+      if ((e as DOMException).name === 'AbortError') return
+      this.watchdog.cancel()
+      this.events.onError?.(mediaError(el.error, url))
+    })
+  }
+
+  private leaveSafe() {
+    if (!this.safeActive) return
+    this.safeActive = false
+    this.safe.pause()
+    this.safe.removeAttribute('src')
+    this.safe.load()
+    this.watchdog.cancel()
   }
 
   async resume() {
@@ -256,6 +317,8 @@ export class AudioEngine {
   }
 
   stop() {
+    this.leaveSafe()
+    this.watchdog.cancel()
     for (const el of this.els) {
       el.pause()
       el.removeAttribute('src')
@@ -274,6 +337,8 @@ export class AudioEngine {
   }
 
   private handleEnded() {
+    this.leaveSafe()
+    this.events.onNotice?.(null)
     const sb = this.standby
     if (this.nextUrl && sb.src === this.nextUrl) {
       this.active = 1 - this.active
@@ -286,7 +351,10 @@ export class AudioEngine {
   }
 }
 
-function mediaError(err: MediaError | null): string {
+function mediaError(err: MediaError | null, url = ''): string {
+  if (typeof location !== 'undefined' && location.protocol === 'https:' && url.startsWith('http:')) {
+    return explainStall(location.protocol, url)
+  }
   switch (err?.code) {
     case MediaError.MEDIA_ERR_NETWORK:
       return 'Network error while streaming'

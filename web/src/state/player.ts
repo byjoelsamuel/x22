@@ -20,6 +20,8 @@ interface PlayerState {
   repeat: Repeat
   shuffle: boolean
   error: string | null
+  /** Non-fatal note, e.g. "EQ off for this track". */
+  notice: string | null
   sleepAt: number | null // epoch ms, or -1 = end of track
 
   current: () => Song | undefined
@@ -69,6 +71,7 @@ export const usePlayer = create<PlayerState>()((set, get) => ({
   repeat: 'off',
   shuffle: false,
   error: null,
+  notice: null,
   sleepAt: null,
 
   current: () => get().queue[get().index],
@@ -208,7 +211,8 @@ export function bindPlayer() {
       }),
     onPlaying: (playing) => usePlayer.setState({ playing }),
     onBuffering: (buffering) => usePlayer.setState({ buffering }),
-    onError: (error) => usePlayer.setState({ error, playing: false }),
+    onError: (error) => usePlayer.setState({ error, playing: false, buffering: false }),
+    onNotice: (notice) => usePlayer.setState({ notice }),
     onEnded: (advanced) => {
       const s = usePlayer.getState()
       const finished = s.current()
