@@ -1,0 +1,79 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    paths: ['web/**', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write # attach APKs to GitHub Releases on tags
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      - uses: android-actions/setup-android@v3
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Version from tag or run number
+        id: ver
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "name=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=0.0.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Debug APK
+        working-directory: web/android
+        run: ./gradlew assembleDebug -PversionCode=${{ github.run_number }} -PversionName=${{ steps.ver.outputs.name }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: x22-debug-${{ steps.ver.outputs.name }}
+          path: web/android/app/build/outputs/apk/debug/app-debug.apk
+
+      # Signed release APK on version tags — only when the keystore secrets exist (see README).
+      - name: Release APK
+        if: startsWith(github.ref, 'refs/tags/v')
+        working-directory: web/android
+        env:
+          KEYSTORE_B64: ${{ secrets.X22_KEYSTORE_BASE64 }}
+          X22_KEYSTORE_PASSWORD: ${{ secrets.X22_KEYSTORE_PASSWORD }}
+          X22_KEY_ALIAS: ${{ secrets.X22_KEY_ALIAS }}
+          X22_KEY_PASSWORD: ${{ secrets.X22_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then echo "No signing secrets — skipping signed release APK"; exit 0; fi
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/x22.jks"
+          X22_KEYSTORE_FILE="$RUNNER_TEMP/x22.jks" ./gradlew assembleRelease \
+            -PversionCode=${{ github.run_number }} -PversionName=${{ steps.ver.outputs.name }}
+          mv app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/x22-${{ steps.ver.outputs.name }}.apk"
+          rm "$RUNNER_TEMP/x22.jks"
+
+      - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          files: |
+            ${{ runner.temp }}/x22-*.apk
+            web/android/app/build/outputs/apk/debug/app-debug.apk
+          generate_release_notes: true
