@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+*.local
+.DS_Store
+
+# TLS material from mkcert — never commit
+deploy/certs/*.pem
+deploy/certs/*.key
+
+# Android signing
+*.jks
+*.keystore
