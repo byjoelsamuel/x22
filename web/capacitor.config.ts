@@ -6,12 +6,11 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   backgroundColor: '#0a0a0a',
   server: {
-    // App runs at https://localhost, so it can talk to Navidrome behind Caddy (HTTPS).
-    androidScheme: 'https',
-  },
-  android: {
-    // Lets a plain-HTTP LAN Navidrome work too. HTTPS (deploy/) is still recommended.
-    allowMixedContent: true,
+    // The app runs at http://localhost — still a secure context (AudioWorklet, service
+    // worker), but a plain-HTTP Navidrome on the LAN is no longer "mixed content".
+    // From an https:// page Android's WebView silently refuses http:// audio streams,
+    // which made songs spin at 0:00. HTTPS servers (Caddy) keep working too.
+    androidScheme: 'http',
   },
 }
 

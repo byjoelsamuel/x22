@@ -106,6 +106,7 @@ export interface NowPlayingView {
   /** Homelab-only features: like, queue, shuffle, repeat. */
   isX22: boolean
   error: string | null
+  notice: string | null
 }
 
 /** Ticks once a second while `on`, so extrapolated positions move. */
@@ -153,6 +154,7 @@ export function useNowPlaying(coverSize = 600): NowPlayingView | null {
       canSeek: !!e.canSeek,
       isX22: false,
       error: null,
+      notice: null,
     }
   }
   if (!song) return null
@@ -170,5 +172,6 @@ export function useNowPlaying(coverSize = 600): NowPlayingView | null {
     canSeek: true,
     isX22: true,
     error: p.error,
+    notice: p.notice,
   }
 }
