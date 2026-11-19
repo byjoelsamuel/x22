@@ -1,18 +1,31 @@
+import { useEffect } from 'react'
 import { useAuth } from './state/auth'
+import { bindPlayer } from './state/player'
+import { useSettings } from './state/settings'
+import './ui/app.css'
+import Home from './ui/Home'
 import Login from './ui/Login'
+import MiniPlayer from './ui/MiniPlayer'
 
 export default function App() {
   const creds = useAuth((s) => s.creds)
-  const setCreds = useAuth((s) => s.setCreds)
+  const theme = useSettings((s) => s.theme)
+
+  useEffect(() => {
+    if (theme === 'system') document.documentElement.removeAttribute('data-theme')
+    else document.documentElement.dataset.theme = theme
+  }, [theme])
+
+  useEffect(() => {
+    if (creds) bindPlayer()
+  }, [creds])
+
   if (!creds) return <Login />
 
   return (
-    <main style={{ display: 'grid', placeItems: 'center', height: '100%', padding: 16 }}>
-      <div style={{ textAlign: 'center' }}>
-        <h1 className="dot" style={{ fontSize: 72, margin: 0 }}>x22</h1>
-        <p className="mono" style={{ color: 'var(--muted)' }}>connected as {creds.user}</p>
-        <button className="pill" onClick={() => setCreds(null)}>Log out</button>
-      </div>
-    </main>
+    <div className="shell">
+      <Home />
+      <MiniPlayer onOpen={() => {}} />
+    </div>
   )
 }
