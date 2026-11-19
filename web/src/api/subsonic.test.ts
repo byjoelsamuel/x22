@@ -65,3 +65,23 @@ describe('calls', () => {
     expect(await new Subsonic(creds).albumList('newest')).toEqual([{ id: 'a', name: 'A' }])
   })
 })
+
+describe('playlists', () => {
+  test('createPlaylist sends repeated songId params and adds the rest in batches', async () => {
+    const urls: string[] = []
+    vi.stubGlobal('fetch', async (u: string) => {
+      urls.push(u)
+      return Response.json({ 'subsonic-response': { status: 'ok', playlist: { id: 'p9', name: 'Gym' } } })
+    })
+    const ids = Array.from({ length: 230 }, (_, i) => `s${i}`)
+    const p = await new Subsonic(creds).createPlaylist('Gym', ids)
+    expect(p.id).toBe('p9')
+    const first = new URL(urls[0])
+    expect(first.pathname).toBe('/rest/createPlaylist')
+    expect(first.searchParams.getAll('songId')).toHaveLength(100)
+    expect(first.searchParams.get('name')).toBe('Gym')
+    const adds = urls.slice(1).map((u) => new URL(u))
+    expect(adds.map((u) => u.pathname)).toEqual(['/rest/updatePlaylist', '/rest/updatePlaylist'])
+    expect(adds[1].searchParams.getAll('songIdToAdd')).toEqual(ids.slice(200))
+  })
+})
