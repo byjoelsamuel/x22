@@ -21,6 +21,8 @@ export interface Credentials {
   salt: string
 }
 
+type Param = string | number | boolean | undefined
+
 export class ApiError extends Error {
   code: number
   constructor(err: SubsonicError) {
@@ -51,7 +53,7 @@ export class Subsonic {
   }
 
   /** Build an absolute (or same-origin) /rest URL with auth params. */
-  url(method: string, params: Record<string, string | number | boolean | undefined> = {}): string {
+  url(method: string, params: Record<string, Param | Param[]> = {}): string {
     const q = new URLSearchParams({
       u: this.creds.user,
       t: this.creds.token,
@@ -61,12 +63,15 @@ export class Subsonic {
       f: 'json',
     })
     for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== '') q.set(k, String(v))
+      // Arrays become repeated params (songId=a&songId=b), as the Subsonic API expects.
+      for (const item of Array.isArray(v) ? v : [v]) {
+        if (item !== undefined && item !== '') q.append(k, String(item))
+      }
     }
     return `${this.creds.server}/rest/${method}?${q.toString()}`
   }
 
-  private async call<T>(method: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
+  private async call<T>(method: string, params?: Record<string, Param | Param[]>): Promise<T> {
     const res = await fetch(this.url(method, params))
     if (!res.ok) throw new ApiError({ code: res.status, message: `HTTP ${res.status}` })
     const body = await res.json()
@@ -127,6 +132,25 @@ export class Subsonic {
   async playlist(id: string): Promise<Playlist> {
     const r = await this.call<{ playlist: Playlist }>('getPlaylist', { id })
     return r.playlist
+  }
+
+  /**
+   * Create a playlist with these songs, in order. Songs go in batches of 100 so the request
+   * URL stays short even for long playlists.
+   */
+  async createPlaylist(name: string, songIds: string[]): Promise<Playlist> {
+    const first = songIds.slice(0, 100)
+    const r = await this.call<{ playlist?: Playlist }>('createPlaylist', { name, songId: first })
+    let playlist = r.playlist
+    if (!playlist?.id) {
+      // Older Subsonic servers return nothing — find the new playlist by name.
+      playlist = (await this.playlists()).filter((p) => p.name === name).at(-1)
+    }
+    if (!playlist?.id) throw new ApiError({ code: -1, message: 'Playlist was not created' })
+    for (let i = 100; i < songIds.length; i += 100) {
+      await this.call('updatePlaylist', { playlistId: playlist.id, songIdToAdd: songIds.slice(i, i + 100) })
+    }
+    return playlist
   }
 
   async star(id: string, on: boolean): Promise<void> {

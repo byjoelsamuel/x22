@@ -75,3 +75,13 @@ test('saves audio, rejects other files, skips duplicates', async () => {
   assert.equal(again.files[0].status, 'skipped')
   assert.deepEqual(await fs.readdir(path.join(music, '.x22-tmp')), []) // temp files cleaned
 })
+
+test('youtube routes require a Navidrome login and explain a missing key', async () => {
+  const noAuth = await fetch(`${base}/api/youtube/playlist?id=PL1xxxxxxxxx`)
+  assert.equal(noAuth.status, 401)
+  const r = await fetch(`${base}/api/youtube/playlist?id=PL1xxxxxxxxx`, {
+    headers: { 'X-Subsonic-User': 'joel', 'X-Subsonic-Token': 'good', 'X-Subsonic-Salt': 's' },
+  })
+  assert.equal(r.status, 501)
+  assert.match((await r.json()).error, /YOUTUBE_API_KEY/)
+})

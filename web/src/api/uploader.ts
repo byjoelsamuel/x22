@@ -11,7 +11,7 @@ export interface UploadResult {
 
 const base = (c: Credentials) => `${c.server}/api`
 
-export async function uploaderHealth(c: Credentials): Promise<{ ok: boolean; maxFileMB?: number }> {
+export async function uploaderHealth(c: Credentials): Promise<{ ok: boolean; maxFileMB?: number; youtube?: boolean }> {
   try {
     const r = await fetch(`${base(c)}/health`, { signal: AbortSignal.timeout(4000) })
     return r.ok ? await r.json() : { ok: false }
@@ -44,3 +44,33 @@ export function uploadFile(c: Credentials, file: File, onProgress: (fraction: nu
     xhr.send(form)
   })
 }
+
+// ── YouTube Music playlist metadata (via the homelab; no downloads) ─────────
+
+export interface YoutubeTrack {
+  id: string
+  title: string
+  artist: string
+  durationSec: number
+}
+
+async function uploaderJson<T>(c: Credentials, path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${base(c)}${path}`, {
+    ...init,
+    headers: {
+      'X-Subsonic-User': c.user,
+      'X-Subsonic-Token': c.token,
+      'X-Subsonic-Salt': c.salt,
+      ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+    },
+  })
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`)
+  return body as T
+}
+
+export const youtubePlaylist = (c: Credentials, id: string) =>
+  uploaderJson<{ name: string; tracks: YoutubeTrack[] }>(c, `/youtube/playlist?id=${encodeURIComponent(id)}`)
+
+export const youtubeVideos = (c: Credentials, ids: string[]) =>
+  uploaderJson<{ tracks: YoutubeTrack[] }>(c, '/youtube/videos', { method: 'POST', body: JSON.stringify({ ids }) })

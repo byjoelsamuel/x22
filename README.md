@@ -25,6 +25,7 @@
 - Home-screen widget
 - Lossless streaming from your homelab (optional)
 - Upload songs to your homelab from your phone
+- Bring your YouTube Music playlists to your homelab
 
 ## Set up the homelab (optional)
 
@@ -48,6 +49,14 @@ You need Docker and Docker Compose, an existing Navidrome, and [mkcert](https://
 5. **Install:** in Chrome, use *⋮ → Install app*; in Safari, use *Share → Add to Home Screen*.
 
 To rescan after uploads, your Navidrome user must be an admin. Otherwise, new songs show up on Navidrome's next scheduled scan.
+
+## Import YouTube Music playlists
+
+Go to **Import → Playlists**. x22 recreates the playlist in Navidrome from songs already in your library. Missing songs get Bandcamp and Qobuz links, so you can add lossless copies through **Import → Files**. Nothing is downloaded from YouTube.
+
+- **Paste a list** (`Artist - Title` per line): works right away.
+- **Takeout file**: export *YouTube and YouTube Music* from [Google Takeout](https://takeout.google.com) and pick `music library songs.csv` or a file from `playlists/`.
+- **Playlist link**: needs a free API key. In [Google Cloud Console](https://console.cloud.google.com/apis/library/youtube.googleapis.com), create a project, enable *YouTube Data API v3*, then go to *Credentials → Create API key*. Put it in `deploy/.env` as `YOUTUBE_API_KEY=` and run `docker compose up -d`. The playlist must be public or unlisted.
 
 ## Android app
 
