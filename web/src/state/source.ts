@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { create } from 'zustand'
 import { externalControl, positionNow, useExternal } from '../native/external'
+import { haptic } from '../native/haptics'
 import { qualityBadge, type Badge } from '../ui/format'
 import { api } from './auth'
 import { usePlayer } from './player'
@@ -74,9 +75,18 @@ export function bindSource() {
 
 /** Transport controls for the active source. */
 export const sourceActions = {
-  toggle: () => (activeSource() === 'external' ? externalControl('toggle') : usePlayer.getState().toggle()),
-  next: () => (activeSource() === 'external' ? externalControl('next') : usePlayer.getState().next()),
-  prev: () => (activeSource() === 'external' ? externalControl('prev') : usePlayer.getState().prev()),
+  toggle: () => {
+    haptic()
+    return activeSource() === 'external' ? externalControl('toggle') : usePlayer.getState().toggle()
+  },
+  next: () => {
+    haptic()
+    return activeSource() === 'external' ? externalControl('next') : usePlayer.getState().next()
+  },
+  prev: () => {
+    haptic()
+    return activeSource() === 'external' ? externalControl('prev') : usePlayer.getState().prev()
+  },
   pause: () => (activeSource() === 'external' ? externalControl('pause') : usePlayer.getState().playing && usePlayer.getState().toggle()),
   seek: (sec: number) => (activeSource() === 'external' ? externalControl('seek', sec) : usePlayer.getState().seek(sec)),
 }

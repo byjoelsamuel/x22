@@ -6,6 +6,7 @@ import { useSettings } from './state/settings'
 import { useUi } from './state/ui'
 import './ui/app.css'
 import ConnectHomelab from './ui/ConnectHomelab'
+import DynamicAccent from './ui/DynamicAccent'
 import Home from './ui/Home'
 import Import from './ui/Import'
 import Library from './ui/Library'
@@ -63,10 +64,13 @@ export default function App() {
 
   return (
     <div className="shell">
-      {tab === 'home' && <Home onOpenPlayer={() => setPlayerOpen(true)} />}
-      {tab === 'library' && <Library refreshKey={libraryVersion} />}
-      {tab === 'import' && <Import onLibraryChanged={() => setLibraryVersion((v) => v + 1)} />}
-      {tab === 'settings' && <Settings />}
+      <DynamicAccent />
+      <div className="tab-view" key={tab}>
+        {tab === 'home' && <Home onOpenPlayer={() => setPlayerOpen(true)} />}
+        {tab === 'library' && <Library refreshKey={libraryVersion} />}
+        {tab === 'import' && <Import onLibraryChanged={() => setLibraryVersion((v) => v + 1)} />}
+        {tab === 'settings' && <Settings />}
+      </div>
       {!playerOpen && <MiniPlayer onOpen={() => setPlayerOpen(true)} />}
       <Nav tab={tab} onTab={setTab} />
       {playerOpen && <NowPlaying onClose={() => setPlayerOpen(false)} />}

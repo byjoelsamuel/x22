@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent } from 'react'
 import { getEngine } from '../audio/engine'
 import { usePlayer } from '../state/player'
 import { useSettings, type GestureAction } from '../state/settings'
 import { sourceActions, useNowPlaying } from '../state/source'
 import DitherImage from './DitherImage'
+import { useSwipe } from './gestures'
+import { haptic } from '../native/haptics'
 import { fmtTime } from './format'
 import { IconDown, IconHeart, IconMoon, IconNext, IconPause, IconPlay, IconPrev, IconQueue, IconRepeat, IconShuffle } from './icons'
 import TrackList from './TrackList'
@@ -24,10 +26,12 @@ function useGestures() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hold = useRef<ReturnType<typeof setTimeout> | null>(null)
   const held = useRef(false)
+  const downAt = useRef<{ x: number; y: number } | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
 
   const fire = (a: GestureAction, label: string) => {
     if (a === 'none') return
+    haptic('medium')
     runGesture(a)
     setFlash(label)
     setTimeout(() => setFlash(null), 600)
@@ -35,16 +39,20 @@ function useGestures() {
 
   return {
     flash,
-    onPointerDown: () => {
+    onPointerDown: (e: PointerEvent) => {
+      downAt.current = { x: e.clientX, y: e.clientY }
       held.current = false
       hold.current = setTimeout(() => {
         held.current = true
         fire(gestures.hold, 'hold')
       }, 550)
     },
-    onPointerUp: () => {
+    onPointerUp: (e: PointerEvent) => {
       if (hold.current) clearTimeout(hold.current)
       if (held.current) return
+      // A drag (e.g. swiping the player closed) is not a tap.
+      const d = downAt.current
+      if (d && Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) return
       taps.current += 1
       if (timer.current) clearTimeout(timer.current)
       timer.current = setTimeout(() => {
@@ -75,6 +83,14 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
   const [scrub, setScrub] = useState<number | null>(null)
   const [, tick] = useState(0)
   const g = useGestures()
+  const [dy, setDy] = useState(0)
+  const swipe = useSwipe(
+    (dir) => {
+      if (dir !== 'down') return false
+      onClose()
+    },
+    (_x, y) => setDy(Math.max(0, Math.min(240, y))),
+  )
   const song = p.queue[p.index]
 
   useEffect(() => {
@@ -97,7 +113,16 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
     p.sleepAt === -1 ? 'end of track' : p.sleepAt ? `${Math.max(0, Math.ceil((p.sleepAt - Date.now()) / 60000))} min` : null
 
   return (
-    <div className="np" role="dialog" aria-label="Now playing">
+    <div
+      className="np"
+      role="dialog"
+      aria-label="Now playing"
+      style={dy && !showQueue ? { transform: `translateY(${dy}px)`, opacity: 1 - dy / 600, transition: 'none' } : undefined}
+      onPointerDown={showQueue ? undefined : swipe.onPointerDown}
+      onPointerMove={showQueue ? undefined : swipe.onPointerMove}
+      onPointerUp={showQueue ? undefined : swipe.onPointerUp}
+      onPointerCancel={showQueue ? undefined : swipe.onPointerCancel}
+    >
       <header className="np-head">
         <button className="icon-btn" onClick={onClose} aria-label="Close">
           <IconDown />
