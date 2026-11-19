@@ -46,6 +46,8 @@ export interface SettingsState {
   theme: 'system' | 'dark' | 'light'
   /** Pastel dithered artwork (otherwise the original cover). */
   ditherArt: boolean
+  /** Experimental: apply the EQ to other apps (Android DynamicsProcessing). */
+  eqOtherApps: boolean
   /** First-run welcome finished (or skipped). */
   onboarded: boolean
   /** Earbud-style gestures on the Now Playing artwork. */
@@ -82,6 +84,7 @@ export const useSettings = create<SettingsState>()(
       theme: 'system',
       ditherArt: true,
       onboarded: false,
+      eqOtherApps: false,
       gestures: { tap: 'toggle', doubleTap: 'next', tripleTap: 'prev', hold: 'like' },
 
       setGain: (band, db) => {

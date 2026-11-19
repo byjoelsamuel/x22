@@ -22,6 +22,7 @@
 | **Lossless & hi-res** | Streams the original file (`format=raw`), so FLAC, ALAC, WAV and AIFF at any bit depth or sample rate play untouched. The audio output opens at the track's sample rate when the device allows it. A quality badge shows what's playing (e.g. `FLAC 24/96`). |
 | **EQ on the home screen** | 10 bands you can drag, presets (Balanced, More bass, Voice, More treble, IEM warm, Late night), custom presets, and an auto preamp so nothing clips. |
 | **IEM support** | Import an [AutoEq](https://autoeq.app) `ParametricEQ.txt` for your IEMs. Crossfeed, balance and mono are included too. |
+| **EQ on other apps** *(experimental)* | *(Android 9+)* Applies your EQ, preset or AutoEq profile, plus balance, to YouTube Music and other players via Android's DynamicsProcessing. It works best when the player announces its audio session; otherwise it falls back to whole-phone mode, which only some phones support. |
 | **Earbud-app features** | Sound modes, tap / double / triple / hold gestures on the artwork, a sleep timer, lock-screen and Bluetooth-button controls, and near-gapless playback. |
 | **Dither** | Pastel Bayer-dithered artwork and optional TPDF audio dither (16 or 24-bit). |
 | **Import from the app** | Upload songs from your phone or PC. They're filed into `Uploads/Artist/Album/` by their tags, and Navidrome rescans automatically. |
