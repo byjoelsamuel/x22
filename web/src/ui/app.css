@@ -181,3 +181,153 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .mini-text { display: grid; min-width: 0; }
 .mini-text > * { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mini-text strong { font-weight: 500; }
+
+/* ── Pages ───────────────────────────────────────── */
+.page-head { padding: 4px 4px 0; }
+.page-title { font-size: 34px; font-weight: 800; margin: 0; }
+.center { text-align: center; }
+.empty { text-align: center; padding: 24px 0; }
+.row-start { display: flex; gap: 8px; align-items: center; }
+.pill { display: inline-flex; align-items: center; gap: 6px; justify-content: center; }
+.pill-on { background: var(--lav); color: #1a1626; border-color: var(--lav); }
+.file-pill { justify-self: start; }
+.select {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 16px;
+  color: var(--muted);
+}
+.search input { flex: 1; font: inherit; color: var(--text); background: none; border: 0; outline: none; padding: 13px 0; min-width: 0; }
+
+/* ── Grid & lists ────────────────────────────────── */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+.tile { display: grid; gap: 4px; text-align: left; border: 0; background: none; padding: 0; cursor: pointer; min-width: 0; }
+.tile-art { width: 100%; aspect-ratio: 1; border-radius: 16px; }
+.tile-title, .tile-sub { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tile-title { font-weight: 500; margin-top: 4px; }
+
+.list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.list li { border-bottom: 1px solid var(--line); }
+.list button { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 14px 4px; background: none; border: 0; cursor: pointer; text-align: left; }
+
+.tracks { list-style: none; margin: 0; padding: 0; }
+.tracks li { display: flex; align-items: center; border-radius: 14px; }
+.tracks li.active { background: var(--surface); }
+.tracks li.active .track-title { color: var(--lav); }
+.track-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 10px 6px; border: 0; background: none; text-align: left; cursor: pointer; }
+.track-no { width: 24px; text-align: center; color: var(--muted); font-size: 12px; flex: none; }
+.track-text { display: grid; min-width: 0; }
+.track-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot-tag { font-family: var(--mono); font-size: 10px; }
+.tag-hires { color: var(--butter); }
+.tag-lossless { color: var(--mint); }
+:root[data-theme='light'] .tag-hires, :root[data-theme='light'] .tag-lossless { color: var(--muted); }
+@media (prefers-color-scheme: light) { :root:not([data-theme='dark']) .tag-hires, :root:not([data-theme='dark']) .tag-lossless { color: var(--muted); } }
+.small-btn { width: 36px; height: 36px; color: var(--muted); font-size: 20px; }
+
+.detail-head { display: grid; justify-items: center; text-align: center; gap: 6px; }
+.detail-art { width: min(260px, 70vw); aspect-ratio: 1; border-radius: 20px; }
+.detail-title { font-size: 22px; font-weight: 500; margin: 10px 0 0; }
+.detail-head p { margin: 0 0 8px; }
+
+/* ── Bottom nav ──────────────────────────────────── */
+.nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  z-index: 11;
+}
+.nav button {
+  flex: 1;
+  max-width: 120px;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  padding: 6px 0;
+  cursor: pointer;
+  font-size: 11px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.nav button.on { color: var(--text); }
+.nav button.on svg { color: var(--lav); }
+
+/* ── Now playing ─────────────────────────────────── */
+.np {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--bg);
+  overflow-y: auto;
+  padding: calc(8px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 560px;
+  margin: 0 auto;
+  animation: slide-up 0.25s ease-out;
+}
+@keyframes slide-up { from { transform: translateY(30px); opacity: 0; } }
+.np-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.np-head .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-art-wrap { position: relative; touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; cursor: pointer; }
+.np-art { width: 100%; aspect-ratio: 1; border-radius: 28px; }
+.np-flash {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 48px;
+  color: #1a1626;
+  pointer-events: none;
+  animation: fade 0.6s ease-out forwards;
+}
+@keyframes fade { to { opacity: 0; transform: scale(1.2); } }
+.np-queue { flex: 1; min-height: 280px; }
+.np-meta { display: flex; align-items: center; gap: 12px; }
+.np-text { flex: 1; min-width: 0; }
+.np-title { font-size: 22px; font-weight: 500; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.np-text p { margin: 2px 0 0; }
+.liked { color: var(--accent); }
+.np-seek { display: grid; gap: 6px; }
+.np-controls { display: flex; align-items: center; justify-content: space-between; }
+.np-play {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--text);
+  color: var(--bg);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.repeat-one { position: absolute; font-size: 9px; margin-top: 1px; }
+.icon-btn { position: relative; }
+.np-foot { display: flex; justify-content: space-between; align-items: center; }
+.sleep-chips { margin: 0; padding: 0; flex-wrap: wrap; }

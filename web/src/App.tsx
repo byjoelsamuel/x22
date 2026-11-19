@@ -1,15 +1,21 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from './state/auth'
-import { bindPlayer } from './state/player'
+import { bindPlayer, usePlayer } from './state/player'
 import { useSettings } from './state/settings'
 import './ui/app.css'
 import Home from './ui/Home'
+import Library from './ui/Library'
 import Login from './ui/Login'
 import MiniPlayer from './ui/MiniPlayer'
+import Nav, { type TabId } from './ui/Nav'
+import NowPlaying from './ui/NowPlaying'
+import Settings from './ui/Settings'
 
 export default function App() {
   const creds = useAuth((s) => s.creds)
   const theme = useSettings((s) => s.theme)
+  const [tab, setTab] = useState<TabId>('home')
+  const [playerOpen, setPlayerOpen] = useState(false)
 
   useEffect(() => {
     if (theme === 'system') document.documentElement.removeAttribute('data-theme')
@@ -20,12 +26,35 @@ export default function App() {
     if (creds) bindPlayer()
   }, [creds])
 
+  useEffect(() => {
+    if (!creds) return
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement
+      if (t.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return
+      const p = usePlayer.getState()
+      if (e.code === 'Space' && !t.closest('button, [role=slider]')) p.toggle()
+      else if (e.key === 'ArrowRight' && e.shiftKey) p.next()
+      else if (e.key === 'ArrowLeft' && e.shiftKey) p.prev()
+      else if (e.key === 'ArrowRight' && !t.closest('[role=slider]')) p.seek(p.time + 10)
+      else if (e.key === 'ArrowLeft' && !t.closest('[role=slider]')) p.seek(p.time - 10)
+      else if (e.key.toLowerCase() === 'l') void p.toggleLike()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [creds])
+
   if (!creds) return <Login />
 
   return (
     <div className="shell">
-      <Home />
-      <MiniPlayer onOpen={() => {}} />
+      {tab === 'home' && <Home onOpenPlayer={() => setPlayerOpen(true)} />}
+      {tab === 'library' && <Library />}
+      {tab === 'settings' && <Settings />}
+      {!playerOpen && <MiniPlayer onOpen={() => setPlayerOpen(true)} />}
+      <Nav tab={tab} onTab={setTab} />
+      {playerOpen && <NowPlaying onClose={() => setPlayerOpen(false)} />}
     </div>
   )
 }
