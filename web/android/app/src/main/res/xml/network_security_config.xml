@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  x22 talks to a Navidrome on your home network.
+  * Trusts user-installed CAs, so the mkcert root from deploy/certs works for HTTPS.
+  * Allows plain HTTP for LAN servers (e.g. http://192.168.0.100:4533) — HTTPS is still recommended.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

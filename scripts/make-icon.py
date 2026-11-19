@@ -2,6 +2,7 @@
 """Generate the x22 app icons: pastel ordered-dither field + dot-matrix "x22".
 
 Usage: python3 scripts/make-icon.py [out_dir]   (default: web/public/icons)
+       python3 scripts/make-icon.py --android web/android/app/src/main/res
 Everything is drawn on a 128x128 pixel grid, then upscaled with nearest-neighbour
 so the dither stays crisp.
 """
@@ -78,7 +79,7 @@ def draw_text(img, text, pitch=5, dot=4):
     def dot_at(cx, cy, colour, checker=False):
         for dy in range(dot):
             for dx in range(dot):
-                corner = dx in (0, dot - 1) and dy in (0, dot - 1)
+                corner = dot >= 4 and dx in (0, dot - 1) and dy in (0, dot - 1)
                 if corner:
                     continue  # round the dot off
                 x, y = cx + dx, cy + dy
@@ -127,7 +128,52 @@ def rounded(img, radius):
     return out
 
 
+def circle(img):
+    """Circular mask for ic_launcher_round."""
+    out = img.convert("RGBA")
+    px = out.load()
+    r = GRID / 2
+    for y in range(GRID):
+        for x in range(GRID):
+            if math.hypot(x + 0.5 - r, y + 0.5 - r) > r:
+                px[x, y] = (0, 0, 0, 0)
+    return out
+
+
+def scaled(im, size):
+    big = im.resize((GRID * 4, GRID * 4), Image.NEAREST)
+    return big if size == GRID * 4 else big.resize((size, size), Image.BOX)
+
+
+DENSITIES = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
+
+
+def android(res):
+    res = Path(res)
+    square = render()
+    legacy = rounded(square, 26)
+    # Adaptive icons show ~72 of 108dp, so the foreground text is drawn smaller.
+    foreground = render(pitch=4, dot=3)
+    for name, d in DENSITIES.items():
+        folder = res / f"mipmap-{name}"
+        folder.mkdir(parents=True, exist_ok=True)
+        scaled(legacy, round(48 * d)).save(folder / "ic_launcher.png", optimize=True)
+        scaled(circle(square), round(48 * d)).save(folder / "ic_launcher_round.png", optimize=True)
+        scaled(foreground, round(108 * d)).save(folder / "ic_launcher_foreground.png", optimize=True)
+
+    # Splash: near-black with the rounded icon centred, at every size the template ships.
+    for f in res.glob("drawable*/splash.png"):
+        w, h = Image.open(f).size
+        canvas = Image.new("RGB", (w, h), (10, 10, 10))
+        icon = scaled(legacy, int(min(w, h) * 0.32))
+        canvas.paste(icon, ((w - icon.width) // 2, (h - icon.height) // 2), icon)
+        canvas.save(f, optimize=True)
+    print(f"android icons written to {res}")
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--android":
+        return android(sys.argv[2])
     out = Path(sys.argv[1] if len(sys.argv) > 1 else "web/public/icons")
     out.mkdir(parents=True, exist_ok=True)
     square = render()
