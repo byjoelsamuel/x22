@@ -13,6 +13,7 @@ import { pipeline } from 'node:stream/promises'
 import Busboy from 'busboy'
 import { parseFile } from 'music-metadata'
 import { extensionOf, safeJoin, targetPath } from './paths.js'
+import { createYoutube, YoutubeError } from './youtube.js'
 
 const env = process.env
 const config = {
@@ -23,6 +24,8 @@ const config = {
   navidrome: (env.NAVIDROME_URL ?? 'http://navidrome:4533').replace(/\/+$/, ''),
   maxFileBytes: Number(env.MAX_FILE_MB ?? 2000) * 1024 * 1024,
   allowedUsers: (env.ALLOWED_USERS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+  youtubeApiKey: env.YOUTUBE_API_KEY ?? '',
+  youtubeApiBase: env.YOUTUBE_API_BASE || undefined,
   corsOrigins: (env.CORS_ORIGINS ?? 'https://localhost,capacitor://localhost,http://localhost')
     .split(',')
     .map((s) => s.trim())
@@ -142,6 +145,42 @@ function handleUpload(req, res) {
   req.pipe(busboy)
 }
 
+// ── YouTube playlist metadata (no downloads) ────────────────────────────
+const youtube = createYoutube({ apiKey: config.youtubeApiKey, baseUrl: config.youtubeApiBase })
+
+async function readJson(req, limit = 64 * 1024) {
+  let size = 0
+  const chunks = []
+  for await (const c of req) {
+    size += c.length
+    if (size > limit) throw new YoutubeError(413, 'Request too large')
+    chunks.push(c)
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}')
+  } catch {
+    throw new YoutubeError(400, 'Invalid JSON')
+  }
+}
+
+async function handleYoutube(req, res, url) {
+  try {
+    if (req.method === 'GET' && url.pathname === '/api/youtube/playlist') {
+      return json(res, 200, await youtube.playlist(url.searchParams.get('id') ?? ''))
+    }
+    if (req.method === 'POST' && url.pathname === '/api/youtube/videos') {
+      const body = await readJson(req)
+      if (!Array.isArray(body.ids)) throw new YoutubeError(400, 'Expected { ids: [...] }')
+      return json(res, 200, { tracks: await youtube.videos(body.ids.map(String)) })
+    }
+    return json(res, 404, { error: 'Not found' })
+  } catch (e) {
+    if (e instanceof YoutubeError) return json(res, e.status, { error: e.message })
+    console.error('youtube', e)
+    return json(res, 502, { error: 'Could not reach YouTube' })
+  }
+}
+
 // ── Server ──────────────────────────────────────────────────────────────
 export function createServer() {
   return http.createServer(async (req, res) => {
@@ -149,7 +188,12 @@ export function createServer() {
     const url = new URL(req.url, 'http://x')
     if (req.method === 'OPTIONS') return res.writeHead(204).end()
     if (req.method === 'GET' && url.pathname === '/api/health') {
-      return json(res, 200, { ok: true, uploadDir: config.uploadSubdir, maxFileMB: config.maxFileBytes / 1048576 })
+      return json(res, 200, {
+        ok: true,
+        uploadDir: config.uploadSubdir,
+        maxFileMB: config.maxFileBytes / 1048576,
+        youtube: youtube.configured,
+      })
     }
     if (req.method === 'POST' && url.pathname === '/api/upload') {
       const auth = await checkAuth(req)
@@ -158,6 +202,14 @@ export function createServer() {
         return json(res, auth.status, { error: auth.message })
       }
       return handleUpload(req, res)
+    }
+    if (url.pathname.startsWith('/api/youtube/')) {
+      const auth = await checkAuth(req)
+      if (!auth.ok) {
+        req.resume()
+        return json(res, auth.status, { error: auth.message })
+      }
+      return handleYoutube(req, res, url)
     }
     json(res, 404, { error: 'Not found' })
   })
