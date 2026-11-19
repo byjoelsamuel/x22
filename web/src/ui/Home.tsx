@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { PRESETS } from '../audio/eq'
-import { api } from '../state/auth'
+import { api, useAuth } from '../state/auth'
 import { usePlayer } from '../state/player'
+import { useUi } from '../state/ui'
 import { activeFilters, currentMode, effectivePreamp, SOUND_MODES, useSettings } from '../state/settings'
 import DitherImage from './DitherImage'
 import EqCurve from './EqCurve'
@@ -12,6 +13,8 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
   const song = usePlayer((p) => p.queue[p.index])
   const playing = usePlayer((p) => p.playing)
   const [busy, setBusy] = useState(false)
+  const connected = useAuth((a) => !!a.creds)
+  const openConnect = useUi((u) => u.openConnect)
   const filters = activeFilters(s)
   const mode = currentMode(s)
   const badge = song ? qualityBadge(song, s.maxBitRate) : null
@@ -54,16 +57,30 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
           ) : (
             <>
               <span className="label">Nothing playing</span>
-              <button
-                className="pill pill-solid"
-                disabled={busy}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  void shuffleAll()
-                }}
-              >
-                {busy ? 'Loading…' : 'Shuffle library'}
-              </button>
+              <div className="hero-actions">
+                {connected ? (
+                  <button
+                    className="pill pill-solid"
+                    disabled={busy}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void shuffleAll()
+                    }}
+                  >
+                    {busy ? 'Loading…' : 'Shuffle homelab'}
+                  </button>
+                ) : (
+                  <button
+                    className="pill"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      openConnect()
+                    }}
+                  >
+                    Connect homelab
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>

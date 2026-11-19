@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => {
         manifest: {
           name: 'x22',
           short_name: 'x22',
-          description: 'Minimal lossless music player for Navidrome',
+          description: 'Minimal music app: control any player, EQ for your IEMs, lossless from your homelab',
           id: '/',
           start_url: '/',
           display: 'standalone',
@@ -68,6 +68,7 @@ export default defineConfig(({ mode }) => {
     test: {
       environment: 'jsdom',
       globals: true,
+      setupFiles: ['src/test-setup.ts'],
     },
   }
 })

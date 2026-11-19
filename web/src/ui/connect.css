@@ -31,3 +31,4 @@
 .login-form input:focus { border-color: var(--text); }
 .login-error { color: var(--accent); margin: 0; font-size: 14px; }
 .login-note { color: var(--muted); font-size: 11px; margin-top: 24px; text-align: center; }
+.login-lead { max-width: 360px; text-align: center; margin: 0 0 20px; }

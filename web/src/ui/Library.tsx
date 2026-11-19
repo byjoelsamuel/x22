@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Album, AlbumListType, Artist, Playlist, Song } from '../api/types'
-import { useApi } from '../state/auth'
+import { useApi, useAuth } from '../state/auth'
 import { usePlayer } from '../state/player'
+import ConnectCard from './ConnectCard'
 import DitherImage from './DitherImage'
 import { IconBack, IconSearch, IconShuffle } from './icons'
 import TrackList from './TrackList'
@@ -44,6 +45,24 @@ function useLoad<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | null; er
 }
 
 export default function Library({ refreshKey = 0 }: { refreshKey?: number }) {
+  const connected = useAuth((s) => !!s.creds)
+  if (!connected) {
+    return (
+      <div className="page">
+        <header className="page-head">
+          <h1 className="dot page-title">Library</h1>
+        </header>
+        <ConnectCard
+          title="Your library lives on your homelab"
+          body="Connect Navidrome to browse albums, artists and playlists and stream them in lossless."
+        />
+      </div>
+    )
+  }
+  return <LibraryBrowser refreshKey={refreshKey} />
+}
+
+function LibraryBrowser({ refreshKey }: { refreshKey: number }) {
   const [tab, setTab] = useState<Tab>('albums')
   const [stack, setStack] = useState<View[]>([{ kind: 'root' }])
   const [query, setQuery] = useState('')

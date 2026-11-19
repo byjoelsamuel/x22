@@ -139,7 +139,7 @@ input[type='range'] { width: 100%; accent-color: var(--lav); }
 .hero { grid-template-columns: 112px 1fr; align-items: center; cursor: pointer; }
 .hero-art { width: 112px; height: 112px; border-radius: 16px; }
 .hero-meta { display: grid; gap: 4px; align-content: center; min-width: 0; }
-.hero-meta .pill { justify-self: start; margin-top: 6px; }
+.hero-meta > .pill { justify-self: start; margin-top: 6px; }
 .hero-title { font-size: 18px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .dither-canvas, .dither-empty { display: block; image-rendering: pixelated; background-color: var(--surface-2); }
@@ -363,3 +363,26 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .status-skipped { color: var(--muted); }
 .status-rejected { color: var(--accent); }
 .success { color: var(--mint); }
+
+/* ── Homelab connect ─────────────────────────────── */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--bg);
+  overflow-y: auto;
+  animation: slide-up 0.25s ease-out;
+}
+.connect-card { padding: 0; background-color: var(--surface); }
+.connect-card-inner {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin: 10px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--surface);
+}
+.connect-card-inner .pill { margin-top: 6px; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.hero-actions .pill { padding: 10px 16px; }
