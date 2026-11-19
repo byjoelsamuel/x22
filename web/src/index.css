@@ -1,0 +1,57 @@
+/* x22 — Nothing / CMF inspired: monochrome, dot-matrix type, one red accent. */
+:root {
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --surface-2: #1d1d1d;
+  --line: #2a2a2a;
+  --text: #f2f2f2;
+  --muted: #8a8a8a;
+  --accent: #d71921;
+  --radius: 22px;
+  --dot: 'Doto', 'Space Mono', monospace;
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'Space Mono', ui-monospace, monospace;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #f4f4f2;
+    --surface: #ffffff;
+    --surface-2: #ececea;
+    --line: #dcdcda;
+    --text: #0e0e0e;
+    --muted: #6b6b6b;
+    color-scheme: light;
+  }
+}
+:root[data-theme='light'] {
+  --bg: #f4f4f2;
+  --surface: #ffffff;
+  --surface-2: #ececea;
+  --line: #dcdcda;
+  --text: #0e0e0e;
+  --muted: #6b6b6b;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; }
+
+/* Ordered (Bayer 4x4) dither texture, used for backgrounds and fills. */
+.dither {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'%3E%3Cg fill='%23888'%3E%3Crect width='1' height='1'/%3E%3Crect x='2' y='2' width='1' height='1'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 4px 4px;
+  image-rendering: pixelated;
+}
+
+.dot { font-family: var(--dot); letter-spacing: 0.04em; }
+.mono { font-family: var(--mono); }
