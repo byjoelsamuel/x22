@@ -66,9 +66,11 @@ public class NowPlayingPlugin extends Plugin {
         final boolean dither = Boolean.TRUE.equals(call.getBoolean("dither", true));
         final Context ctx = getContext().getApplicationContext();
 
+        NowPlayingStore.setDitherPref(ctx, dither);
         io.execute(() -> {
             String coverKey = cover == null ? null : cover + "|" + dither;
-            if (coverKey == null || !coverKey.equals(lastCoverKey)) {
+            // Re-render when the track changed or another app's cover is in the widget.
+            if (coverKey == null || !coverKey.equals(lastCoverKey) || NowPlayingStore.isExternal(ctx)) {
                 Bitmap art = cover == null ? null : CoverArt.load(cover, dither);
                 NowPlayingStore.saveCover(ctx, art);
                 lastCoverKey = coverKey;
