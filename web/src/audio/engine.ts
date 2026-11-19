@@ -166,7 +166,7 @@ export class AudioEngine {
     }
 
     this.rewire()
-    this.applyDsp()
+    this.setDsp({}) // builds filter nodes for settings applied before the context existed
   }
 
   private rewire() {
