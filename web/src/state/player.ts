@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Song } from '../api/types'
 import { getEngine } from '../audio/engine'
 import { api } from './auth'
+import { bindMediaSession } from './mediaSession'
 import { activeFilters, effectivePreamp, useSettings } from './settings'
 
 export type Repeat = 'off' | 'all' | 'one'
@@ -31,6 +32,7 @@ interface PlayerState {
   setRepeat: (r: Repeat) => void
   toggleShuffle: () => void
   setSleep: (minutes: number | 'track' | null) => void
+  toggleLike: () => Promise<void>
 }
 
 function streamUrl(song: Song) {
@@ -164,6 +166,19 @@ export const usePlayer = create<PlayerState>()((set, get) => ({
     }, minutes * 60_000)
     set({ sleepAt: at })
   },
+
+  toggleLike: async () => {
+    const song = get().current()
+    if (!song) return
+    const on = !song.starred
+    const mark = (q: Song[]) => q.map((x) => (x.id === song.id ? { ...x, starred: on ? new Date().toISOString() : undefined } : x))
+    set({ queue: mark(get().queue) })
+    try {
+      await api().star(song.id, on)
+    } catch {
+      set({ queue: mark(get().queue).map((x) => (x.id === song.id ? { ...x, starred: song.starred } : x)) })
+    }
+  },
 }))
 
 function preloadNext() {
@@ -179,7 +194,13 @@ export function bindPlayer() {
   bound = true
   const engine = getEngine()
   engine.events = {
-    onTime: (time, duration) => usePlayer.setState({ time, duration: duration || usePlayer.getState().duration }),
+    // Transcoded streams have no Content-Length, so the browser reports Infinity —
+    // fall back to the track length from Navidrome's metadata.
+    onTime: (time, duration) =>
+      usePlayer.setState({
+        time,
+        duration: Number.isFinite(duration) && duration > 0 ? duration : usePlayer.getState().duration,
+      }),
     onPlaying: (playing) => usePlayer.setState({ playing }),
     onBuffering: (buffering) => usePlayer.setState({ buffering }),
     onError: (error) => usePlayer.setState({ error, playing: false }),
@@ -215,4 +236,5 @@ export function bindPlayer() {
   }
   applyDsp()
   useSettings.subscribe(applyDsp)
+  bindMediaSession()
 }

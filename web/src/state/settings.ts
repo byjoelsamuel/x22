@@ -10,6 +10,16 @@ export const SOUND_MODES: { id: SoundMode; name: string; preset: string }[] = [
   { id: 'night', name: 'Night', preset: 'night' },
 ]
 
+export type GestureAction = 'none' | 'toggle' | 'next' | 'prev' | 'like' | 'art'
+export const GESTURE_ACTIONS: { id: GestureAction; name: string }[] = [
+  { id: 'none', name: 'Nothing' },
+  { id: 'toggle', name: 'Play / pause' },
+  { id: 'next', name: 'Next track' },
+  { id: 'prev', name: 'Previous track' },
+  { id: 'like', name: 'Like' },
+  { id: 'art', name: 'Dither on / off' },
+]
+
 export interface CustomPreset {
   id: string
   name: string
@@ -34,6 +44,10 @@ export interface SettingsState {
   maxBitRate: number
   matchSampleRate: boolean
   theme: 'system' | 'dark' | 'light'
+  /** Pastel dithered artwork (otherwise the original cover). */
+  ditherArt: boolean
+  /** Earbud-style gestures on the Now Playing artwork. */
+  gestures: { tap: GestureAction; doubleTap: GestureAction; tripleTap: GestureAction; hold: GestureAction }
 
   setGain: (band: number, db: number) => void
   setGains: (gains: number[], presetId?: string | null) => void
@@ -64,6 +78,8 @@ export const useSettings = create<SettingsState>()(
       maxBitRate: 0,
       matchSampleRate: true,
       theme: 'system',
+      ditherArt: true,
+      gestures: { tap: 'toggle', doubleTap: 'next', tripleTap: 'prev', hold: 'like' },
 
       setGain: (band, db) => {
         const gains = [...get().gains]
