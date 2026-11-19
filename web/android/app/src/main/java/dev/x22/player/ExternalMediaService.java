@@ -12,10 +12,12 @@ public class ExternalMediaService extends NotificationListenerService {
     @Override
     public void onListenerConnected() {
         ExternalMedia.get(this).start();
+        ExternalEq.get(this).startListening();
     }
 
     @Override
     public void onListenerDisconnected() {
         ExternalMedia.get(this).stop();
+        ExternalEq.get(this).stopListening();
     }
 }

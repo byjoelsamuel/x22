@@ -393,3 +393,4 @@ img.hero-art, img.mini-art, img.np-art { object-fit: cover; }
 .source-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--lav); }
 .source-dot.ext { background: var(--accent); }
 .chip.on .source-dot { background: #1a1626; }
+.eq-hint { margin: 0; }

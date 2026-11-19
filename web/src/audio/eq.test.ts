@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { autoPreamp, BANDS, filterDb, graphicFilters, parseAutoEq, PRESETS, responseDb } from './eq'
+import { autoPreamp, balanceDb, BANDS, externalEqBands, filterDb, graphicFilters, parseAutoEq, PRESETS, responseDb } from './eq'
 
 describe('eq math', () => {
   test('flat EQ has a flat response and no preamp', () => {
@@ -52,5 +52,29 @@ Filter 4: OFF PK Fc 50 Hz Gain 9 dB Q 1`)
 
   test('rejects files without filters', () => {
     expect(() => parseAutoEq('hello')).toThrow()
+  })
+})
+
+describe('EQ for other apps', () => {
+  test('flat EQ maps to 32 flat bands covering 20 Hz – 20 kHz', () => {
+    const bands = externalEqBands([])
+    expect(bands).toHaveLength(32)
+    expect(bands.every((b) => b.gain === 0)).toBe(true)
+    expect(bands.at(-1)!.cutoff).toBe(20000)
+    for (let i = 1; i < bands.length; i++) expect(bands[i].cutoff).toBeGreaterThan(bands[i - 1].cutoff)
+  })
+
+  test('band gains follow the real x22 curve', () => {
+    const bass = graphicFilters(PRESETS.find((p) => p.id === 'bass')!.gains)
+    const bands = externalEqBands(bass)
+    expect(bands[0].gain).toBeCloseTo(responseDb(bass, 20), 1)
+    expect(bands[0].gain).toBeGreaterThan(5)
+    expect(Math.abs(bands.at(-1)!.gain)).toBeLessThan(0.5)
+  })
+
+  test('balance attenuates the opposite side only', () => {
+    expect(balanceDb(0)).toEqual([0, 0])
+    expect(balanceDb(0.5)).toEqual([-6, 0])
+    expect(balanceDb(-1)).toEqual([0, -60])
   })
 })

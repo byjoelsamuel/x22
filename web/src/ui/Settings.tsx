@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { parseAutoEq } from '../audio/eq'
 import { useAuth } from '../state/auth'
-import { openAccessSettings, openExternalApp, useExternal } from '../native/external'
+import { eqStatusText, openAccessSettings, openExternalApp, useExternal } from '../native/external'
 import { disconnectHomelab, useUi } from '../state/ui'
 import { GESTURE_ACTIONS, useSettings, type GestureAction, type SettingsState } from '../state/settings'
 import { Switch } from './Home'
@@ -59,6 +59,12 @@ export default function Settings() {
                 Grant
               </button>
             )}
+          </Row>
+          <Row
+            label="EQ on other apps"
+            hint={`Experimental · ${eqStatusText(ext.eqStatus, ext.state?.app)}. Uses your EQ, preset or IEM profile and balance — not crossfeed, mono or dither.`}
+          >
+            <Switch on={s.eqOtherApps} onChange={(v) => s.set({ eqOtherApps: v })} label="EQ on other apps" />
           </Row>
         </section>
       )}

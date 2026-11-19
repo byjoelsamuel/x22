@@ -175,6 +175,12 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
             </button>
           )}
         </div>
+        {np && !np.isX22 && !s.eqOtherApps && canControlApps && (
+          <p className="muted small eq-hint">
+            This EQ shapes x22's own playback. To try it on {np.badge?.label.toLowerCase() ?? 'other apps'}, turn on{' '}
+            <strong>EQ on other apps</strong> in Settings.
+          </p>
+        )}
         <div className="row muted mono small">
           <span>Preamp {fmtDb(s.eqEnabled ? effectivePreamp(s) : 0)}</span>
           <label className="inline">
