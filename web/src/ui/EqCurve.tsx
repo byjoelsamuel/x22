@@ -1,5 +1,6 @@
 import { useMemo, useRef, type KeyboardEvent, type PointerEvent } from 'react'
 import { BANDS, bandLabel, GAIN_LIMIT, logFreqs, responseDb, type Filter } from '../audio/eq'
+import { haptic } from '../native/haptics'
 
 const W = 340
 const H = 180
@@ -39,14 +40,19 @@ export default function EqCurve({ filters, gains, editable, onChange }: Props) {
     return Math.round(Math.max(-GAIN_LIMIT, Math.min(GAIN_LIMIT, dbOf(y))) * 2) / 2
   }
 
+  function set(band: number, db: number) {
+    if (db === (gains[band] ?? 0)) return
+    if (db === 0 || Math.abs(db) % 3 === 0) haptic() // tick on 0 / ±3 / ±6… dB
+    onChange(band, db)
+  }
   function down(band: number, e: PointerEvent<SVGElement>) {
     if (!editable) return
     dragging.current = band
     ;(e.target as Element).setPointerCapture(e.pointerId)
-    onChange(band, toDb(e))
+    set(band, toDb(e))
   }
   function move(e: PointerEvent<SVGElement>) {
-    if (dragging.current !== null) onChange(dragging.current, toDb(e))
+    if (dragging.current !== null) set(dragging.current, toDb(e))
   }
   function up() {
     dragging.current = null
