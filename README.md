@@ -5,37 +5,26 @@
 <h1 align="center">x22</h1>
 
 <p align="center">
-  A minimal, earbud-app-style music app for Android and the web.<br/>
-  Use it with the players you already have, and optionally stream lossless from your homelab
-  (<a href="https://www.navidrome.org/">Navidrome</a>).<br/>
-  A 10-band EQ on the home screen, IEM tuning, a home-screen widget, and a dithered pastel look.
+  A minimal music app with a big EQ, IEM tuning and a dithered pastel look.
+</p>
+
+<p align="center">
+  <a href="https://github.com/byjoelsamuel/x22/releases/latest/download/x22-android.apk">
+    <img alt="Download for Android" src="https://img.shields.io/badge/Download-Android%20APK-c9b8f0?style=for-the-badge&logo=android&logoColor=1a1626&labelColor=fff1ba" />
+  </a>
+  <br/>
+  <sub><a href="https://github.com/byjoelsamuel/x22/releases">All releases</a></sub>
 </p>
 
 ---
 
 ## Features
 
-| | |
-| --- | --- |
-| **Works with your player** | *(Android)* Keep listening in **YouTube Music**, or any other player, and see, skip and seek it from x22, its home-screen widget and gestures. x22 follows whatever is playing, and you can pin a source from the chip on Home. Grant **Notification access** once; x22 only uses it for media sessions. |
-| **Homelab is optional** | x22 works without a server. Connect Navidrome whenever you like, from onboarding, Settings, or the Library and Import tabs. |
-| **Lossless & hi-res** | Streams the original file (`format=raw`), so FLAC, ALAC, WAV and AIFF at any bit depth or sample rate play untouched. The audio output opens at the track's sample rate when the device allows it. A quality badge shows what's playing (e.g. `FLAC 24/96`). |
-| **EQ on the home screen** | 10 bands you can drag, presets (Balanced, More bass, Voice, More treble, IEM warm, Late night), custom presets, and an auto preamp so nothing clips. |
-| **IEM support** | Import an [AutoEq](https://autoeq.app) `ParametricEQ.txt` for your IEMs. Crossfeed, balance and mono are included too. |
-| **EQ on other apps** *(experimental)* | *(Android 9+)* Applies your EQ, preset or AutoEq profile, plus balance, to YouTube Music and other players via Android's DynamicsProcessing. It works best when the player announces its audio session; otherwise it falls back to whole-phone mode, which only some phones support. |
-| **Earbud-app features** | Sound modes, tap / double / triple / hold gestures on the artwork, a sleep timer, lock-screen and Bluetooth-button controls, and near-gapless playback. |
-| **Dither** | Pastel Bayer-dithered artwork and optional TPDF audio dither (16 or 24-bit). |
-| **Import from the app** | Upload songs from your phone or PC. They're filed into `Uploads/Artist/Album/` by their tags, and Navidrome rescans automatically. |
-| **Installable** | Installs as a PWA over HTTPS, or as an Android APK built by GitHub Actions. |
-
-## How it fits together
-
-```
-phone / PC / APK ──HTTPS──▶ Caddy (homelab laptop, mkcert cert)
-                              ├─ /         x22 app
-                              ├─ /rest/*   ──▶ Navidrome :4533
-                              └─ /api/*    ──▶ uploader ──▶ music folder ──▶ Navidrome rescan
-```
+- Works with YouTube Music and your other music apps
+- 10-band EQ, presets and IEM profiles
+- Home-screen widget
+- Lossless streaming from your homelab (optional)
+- Upload songs to your homelab from your phone
 
 ## Set up the homelab (optional)
 
@@ -62,15 +51,12 @@ To rescan after uploads, your Navidrome user must be an admin. Otherwise, new so
 
 ## Android app
 
-Every push to `main` builds a debug APK. Download it from **Actions → Android → Artifacts**. Version tags (`v1.0.0`) attach APKs to a GitHub Release.
+1. Download **x22-android.apk** from the [latest release](https://github.com/byjoelsamuel/x22/releases/latest) and open it. Android will ask you to allow installs from your browser.
+2. *(Homelab only)* Install the mkcert CA on the phone (step 1 above), then connect to `https://192.168.0.100`.
 
-1. Install the APK. Android will ask you to allow installs from your browser or file manager.
-2. Install the mkcert CA on the phone (step 1 above).
-3. Open x22 and set *Server* to `https://192.168.0.100`.
+**Widget:** long-press your home screen → *Widgets* → **x22 player**.
 
-**Home-screen widget:** long-press your home screen → *Widgets* → **x22 player** (4×2). It shows the dithered cover, title and artist with ⏮ ⏯ ⏭ buttons. Tapping the cover opens the app. While music plays, x22 also runs a media notification. That keeps playback alive in the background and lets your earbuds' or IEM remote's buttons control x22.
-
-**Signed release builds (optional):** create a keystore once, keep it safe, and add four repository secrets.
+**Publishing a release:** add `.github/releases/vX.Y.Z.md`, then push the tag `vX.Y.Z`. CI builds the signed APK and publishes it. Signing needs four repository secrets, created once:
 
 ```bash
 keytool -genkey -v -keystore x22.jks -alias x22 -keyalg RSA -keysize 2048 -validity 10000
