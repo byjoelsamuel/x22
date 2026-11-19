@@ -46,6 +46,8 @@ export interface SettingsState {
   theme: 'system' | 'dark' | 'light'
   /** Pastel dithered artwork (otherwise the original cover). */
   ditherArt: boolean
+  /** First-run welcome finished (or skipped). */
+  onboarded: boolean
   /** Earbud-style gestures on the Now Playing artwork. */
   gestures: { tap: GestureAction; doubleTap: GestureAction; tripleTap: GestureAction; hold: GestureAction }
 
@@ -79,6 +81,7 @@ export const useSettings = create<SettingsState>()(
       matchSampleRate: true,
       theme: 'system',
       ditherArt: true,
+      onboarded: false,
       gestures: { tap: 'toggle', doubleTap: 'next', tripleTap: 'prev', hold: 'like' },
 
       setGain: (band, db) => {

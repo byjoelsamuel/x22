@@ -2,19 +2,24 @@ import { useEffect, useState } from 'react'
 import { useAuth } from './state/auth'
 import { bindPlayer, usePlayer } from './state/player'
 import { useSettings } from './state/settings'
+import { useUi } from './state/ui'
 import './ui/app.css'
+import ConnectHomelab from './ui/ConnectHomelab'
 import Home from './ui/Home'
 import Import from './ui/Import'
 import Library from './ui/Library'
-import Login from './ui/Login'
 import MiniPlayer from './ui/MiniPlayer'
 import Nav, { type TabId } from './ui/Nav'
 import NowPlaying from './ui/NowPlaying'
+import Onboarding from './ui/Onboarding'
 import Settings from './ui/Settings'
 
 export default function App() {
-  const creds = useAuth((s) => s.creds)
+  const connected = useAuth((s) => !!s.creds)
   const theme = useSettings((s) => s.theme)
+  const onboarded = useSettings((s) => s.onboarded)
+  const connectOpen = useUi((s) => s.connectOpen)
+  const closeConnect = useUi((s) => s.closeConnect)
   const [tab, setTab] = useState<TabId>('home')
   const [playerOpen, setPlayerOpen] = useState(false)
   const [libraryVersion, setLibraryVersion] = useState(0)
@@ -25,11 +30,10 @@ export default function App() {
   }, [theme])
 
   useEffect(() => {
-    if (creds) bindPlayer()
-  }, [creds])
+    bindPlayer()
+  }, [])
 
   useEffect(() => {
-    if (!creds) return
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       if (t.closest('input, textarea, select, [contenteditable]') || e.metaKey || e.ctrlKey || e.altKey) return
@@ -45,9 +49,10 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [creds])
+  }, [])
 
-  if (!creds) return <Login />
+  // First run (people who connected before this version count as onboarded).
+  if (!onboarded && !connected) return <Onboarding />
 
   return (
     <div className="shell">
@@ -58,6 +63,11 @@ export default function App() {
       {!playerOpen && <MiniPlayer onOpen={() => setPlayerOpen(true)} />}
       <Nav tab={tab} onTab={setTab} />
       {playerOpen && <NowPlaying onClose={() => setPlayerOpen(false)} />}
+      {connectOpen && (
+        <div className="sheet" role="dialog" aria-label="Connect homelab">
+          <ConnectHomelab onDone={closeConnect} onSkip={closeConnect} skipLabel="Cancel" />
+        </div>
+      )}
     </div>
   )
 }
