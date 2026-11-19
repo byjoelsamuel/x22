@@ -9,6 +9,7 @@ import { haptic } from '../native/haptics'
 import { fmtTime } from './format'
 import { IconDown, IconHeart, IconMoon, IconNext, IconPause, IconPlay, IconPrev, IconQueue, IconRepeat, IconShuffle } from './icons'
 import TrackList from './TrackList'
+import Visualizer from './Visualizer'
 
 function runGesture(action: GestureAction) {
   // Transport gestures follow whatever is playing (x22 or another app); like is homelab-only.
@@ -154,6 +155,8 @@ export default function NowPlaying({ onClose }: { onClose: () => void }) {
           {g.flash && <span className="np-flash dot">{g.flash}</span>}
         </div>
       )}
+
+      {!showQueue && x22 && <Visualizer playing={np.playing} className="np-viz" />}
 
       <div className="np-meta">
         <div className="np-text">

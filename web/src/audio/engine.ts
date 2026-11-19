@@ -1,5 +1,6 @@
 import ditherUrl from './dither.worklet.ts?worker&url'
 import type { Filter } from './eq'
+import { Spectrum } from './visualizer'
 import { explainStall, StallWatchdog } from './watchdog'
 
 /**
@@ -46,6 +47,8 @@ export class AudioEngine {
   private readonly watchdog = new StallWatchdog()
   /** Bumped on every play(); a superseded attempt stops itself instead of starting. */
   private playToken = 0
+  /** Spectrum tap for the visualizer (reads the final mix; does not alter it). */
+  readonly spectrum = new Spectrum()
 
   ctx: AudioContext | null = null
   private input!: GainNode
@@ -187,6 +190,7 @@ export class AudioEngine {
     }
 
     this.rewire()
+    this.spectrum.attach(ctx, this.volume)
     this.setDsp({}) // builds filter nodes for settings applied before the context existed
   }
 
@@ -203,6 +207,8 @@ export class AudioEngine {
     tail.push(this.volume, this.ctx.destination)
     for (const n of [this.xfOut, this.monoNode, this.balance, this.dither, this.volume]) n?.disconnect()
     for (let i = 0; i < tail.length - 1; i++) tail[i].connect(tail[i + 1])
+    // The disconnect() above also drops the visualizer tap; put it back.
+    this.spectrum.reconnect(this.volume)
   }
 
   /** Apply EQ / DSP settings. Cheap to call often; rebuilds filters only when the count changes. */
