@@ -44,6 +44,8 @@ export interface SettingsState {
   maxBitRate: number
   matchSampleRate: boolean
   theme: 'system' | 'dark' | 'light'
+  /** Tint the player with a colour taken from the album art. */
+  dynamicColor: boolean
   /** Pastel dithered artwork (otherwise the original cover). */
   ditherArt: boolean
   /** Experimental: apply the EQ to other apps (Android DynamicsProcessing). */
@@ -83,6 +85,7 @@ export const useSettings = create<SettingsState>()(
       matchSampleRate: true,
       theme: 'system',
       ditherArt: true,
+      dynamicColor: true,
       onboarded: false,
       eqOtherApps: false,
       gestures: { tap: 'toggle', doubleTap: 'next', tripleTap: 'prev', hold: 'like' },

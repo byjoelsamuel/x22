@@ -162,6 +162,9 @@ export default function Settings() {
             </button>
           ))}
         </div>
+              <Row label="Dynamic colour" hint="Tint the player with a colour from the album art">
+          <Switch on={s.dynamicColor} onChange={(v) => s.set({ dynamicColor: v })} label="Dynamic colour" />
+        </Row>
       </section>
 
       <section className="card">
