@@ -1,0 +1,7 @@
+.git
+**/node_modules
+web/dist
+web/dev-dist
+web/android
+deploy/certs
+deploy/.env
