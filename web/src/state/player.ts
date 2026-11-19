@@ -4,6 +4,7 @@ import { getEngine } from '../audio/engine'
 import { api } from './auth'
 import { bindExternal, externalControl, useExternal } from '../native/external'
 import { bindNativeNowPlaying } from '../native/nowPlaying'
+import { bindUpdater } from '../native/updater'
 import { bindMediaSession } from './mediaSession'
 import { bindSource } from './source'
 import { activeFilters, effectivePreamp, useSettings } from './settings'
@@ -249,4 +250,5 @@ export function bindPlayer() {
   bindExternal()
   bindSource()
   bindNativeNowPlaying()
+  bindUpdater()
 }

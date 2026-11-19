@@ -10,6 +10,7 @@ import DitherImage from './DitherImage'
 import EqCurve from './EqCurve'
 import { fmtDb } from './format'
 import SourceChip from './SourceChip'
+import { UpdateBanner } from './Updates'
 
 export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
   const s = useSettings()
@@ -51,6 +52,8 @@ export default function Home({ onOpenPlayer }: { onOpenPlayer?: () => void }) {
           {badge && <span className={`badge badge-${badge.tier}`}>{badge.label}</span>}
         </span>
       </header>
+
+      <UpdateBanner />
 
       <section className="card hero" onClick={np ? onOpenPlayer : undefined}>
         <DitherImage src={np?.cover} className="hero-art" alt={np?.album} />

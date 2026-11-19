@@ -6,6 +6,7 @@ import { disconnectHomelab, useUi } from '../state/ui'
 import { GESTURE_ACTIONS, useSettings, type GestureAction, type SettingsState } from '../state/settings'
 import { Switch } from './Home'
 import PlaybackCheck from './PlaybackCheck'
+import Updates from './Updates'
 
 const QUALITY = [
   { value: 0, name: 'Original', hint: 'Lossless / hi-res, no transcoding' },
@@ -167,6 +168,8 @@ export default function Settings() {
           <Switch on={s.dynamicColor} onChange={(v) => s.set({ dynamicColor: v })} label="Dynamic colour" />
         </Row>
       </section>
+
+      <Updates />
 
       {creds && <PlaybackCheck />}
 

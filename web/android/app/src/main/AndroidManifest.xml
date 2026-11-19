@@ -80,4 +80,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Experimental EQ on other apps (DynamicsProcessing) -->
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- In-app updates: hand the downloaded release APK to Android's installer -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 </manifest>
