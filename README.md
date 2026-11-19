@@ -5,8 +5,10 @@
 <h1 align="center">x22</h1>
 
 <p align="center">
-  A minimal, earbud-app-style music player for <a href="https://www.navidrome.org/">Navidrome</a>.<br/>
-  Lossless and hi-res, a 10-band EQ on the home screen, IEM tuning, and a dithered pastel look.
+  A minimal, earbud-app-style music app for Android and the web.<br/>
+  Use it with the players you already have, and optionally stream lossless from your homelab
+  (<a href="https://www.navidrome.org/">Navidrome</a>).<br/>
+  A 10-band EQ on the home screen, IEM tuning, a home-screen widget, and a dithered pastel look.
 </p>
 
 ---
@@ -15,6 +17,7 @@
 
 | | |
 | --- | --- |
+| **Homelab is optional** | x22 works without a server. Connect Navidrome whenever you like, from onboarding, Settings, or the Library and Import tabs. |
 | **Lossless & hi-res** | Streams the original file (`format=raw`), so FLAC, ALAC, WAV and AIFF at any bit depth or sample rate play untouched. The audio output opens at the track's sample rate when the device allows it. A quality badge shows what's playing (e.g. `FLAC 24/96`). |
 | **EQ on the home screen** | 10 bands you can drag, presets (Balanced, More bass, Voice, More treble, IEM warm, Late night), custom presets, and an auto preamp so nothing clips. |
 | **IEM support** | Import an [AutoEq](https://autoeq.app) `ParametricEQ.txt` for your IEMs. Crossfeed, balance and mono are included too. |
@@ -32,7 +35,7 @@ phone / PC / APK ──HTTPS──▶ Caddy (homelab laptop, mkcert cert)
                               └─ /api/*    ──▶ uploader ──▶ music folder ──▶ Navidrome rescan
 ```
 
-## Set up on the homelab
+## Set up the homelab (optional)
 
 You need Docker and Docker Compose, an existing Navidrome, and [mkcert](https://github.com/FiloSottile/mkcert).
 
@@ -50,7 +53,7 @@ You need Docker and Docker Compose, an existing Navidrome, and [mkcert](https://
    docker compose up -d --build
    ```
 
-4. Open **https://192.168.0.100** and log in with your Navidrome account. Leave *Server* empty.
+4. Open **https://192.168.0.100**, choose **Connect** and log in with your Navidrome account. Leave *Server* empty.
 5. **Install:** in Chrome, use *⋮ → Install app*; in Safari, use *Share → Add to Home Screen*.
 
 To rescan after uploads, your Navidrome user must be an admin. Otherwise, new songs show up on Navidrome's next scheduled scan.

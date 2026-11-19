@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react'
 import { parseAutoEq } from '../audio/eq'
 import { useAuth } from '../state/auth'
-import { usePlayer } from '../state/player'
+import { disconnectHomelab, useUi } from '../state/ui'
 import { GESTURE_ACTIONS, useSettings, type GestureAction, type SettingsState } from '../state/settings'
 import { Switch } from './Home'
 
@@ -15,7 +15,7 @@ const QUALITY = [
 export default function Settings() {
   const s = useSettings()
   const creds = useAuth((a) => a.creds)
-  const setCreds = useAuth((a) => a.setCreds)
+  const openConnect = useUi((u) => u.openConnect)
   const [profileError, setProfileError] = useState<string | null>(null)
   const secure = typeof window !== 'undefined' && window.isSecureContext
 
@@ -134,18 +134,20 @@ export default function Settings() {
       </section>
 
       <section className="card">
-        <h2 className="label">Account</h2>
-        <Row label={creds?.user ?? ''} hint={creds?.server || window.location.origin}>
-          <button
-            className="pill"
-            onClick={() => {
-              usePlayer.getState().setSleep(null)
-              setCreds(null)
-            }}
-          >
-            Log out
-          </button>
-        </Row>
+        <h2 className="label">Homelab</h2>
+        {creds ? (
+          <Row label={creds.user} hint={creds.server || window.location.origin}>
+            <button className="pill" onClick={disconnectHomelab}>
+              Disconnect
+            </button>
+          </Row>
+        ) : (
+          <Row label="Not connected" hint="Optional — stream your Navidrome library in lossless">
+            <button className="pill pill-solid" onClick={openConnect}>
+              Connect
+            </button>
+          </Row>
+        )}
       </section>
 
       <p className="muted small mono center">x22 v{__APP_VERSION__}</p>

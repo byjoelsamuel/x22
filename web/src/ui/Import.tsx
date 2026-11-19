@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { uploaderHealth, uploadFile, type UploadResult } from '../api/uploader'
 import { api, useAuth } from '../state/auth'
+import ConnectCard from './ConnectCard'
 import { IconUpload } from './icons'
 
 const AUDIO = /\.(flac|mp3|m4a|aac|alac|ogg|oga|opus|wav|aiff?|wv|ape|dsf|dff)$/i
@@ -16,6 +17,24 @@ interface Item {
 type Phase = 'idle' | 'uploading' | 'scanning' | 'done'
 
 export default function Import({ onLibraryChanged }: { onLibraryChanged: () => void }) {
+  const connected = useAuth((s) => !!s.creds)
+  if (!connected) {
+    return (
+      <div className="page">
+        <header className="page-head">
+          <h1 className="dot page-title">Import</h1>
+        </header>
+        <ConnectCard
+          title="Add songs to your homelab"
+          body="Connect Navidrome to upload FLAC, ALAC, MP3 and more straight into your library."
+        />
+      </div>
+    )
+  }
+  return <Uploader onLibraryChanged={onLibraryChanged} />
+}
+
+function Uploader({ onLibraryChanged }: { onLibraryChanged: () => void }) {
   const creds = useAuth((s) => s.creds)!
   const [items, setItems] = useState<Item[]>([])
   const [phase, setPhase] = useState<Phase>('idle')
