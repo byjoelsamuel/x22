@@ -10,9 +10,10 @@
     android:maxResizeWidth="560dp"
     android:maxResizeHeight="300dp"
     android:previewImage="@drawable/widget_preview"
+    android:initialKeyguardLayout="@layout/widget_player_compact"
     android:previewLayout="@layout/widget_player"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
     android:updatePeriodMillis="0"
-    android:widgetCategory="home_screen" />
+    android:widgetCategory="home_screen|keyguard" />
