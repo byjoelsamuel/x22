@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
           id: '/',
           start_url: '/',
           display: 'standalone',
-          orientation: 'portrait',
+          orientation: 'any',
           background_color: '#0a0a0a',
           theme_color: '#0a0a0a',
           categories: ['music', 'entertainment'],
