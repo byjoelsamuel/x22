@@ -168,7 +168,49 @@ def android(res):
         icon = scaled(legacy, int(min(w, h) * 0.32))
         canvas.paste(icon, ((w - icon.width) // 2, (h - icon.height) // 2), icon)
         canvas.save(f, optimize=True)
+    widget_assets(res)
     print(f"android icons written to {res}")
+
+
+def widget_assets(res):
+    """Placeholder cover + widget-picker preview for the home-screen player widget."""
+    from PIL import ImageDraw, ImageFont
+
+    nodpi = res / "drawable-nodpi"
+    nodpi.mkdir(parents=True, exist_ok=True)
+    blank = Image.new("RGB", (GRID, GRID))
+    px = blank.load()
+    for y in range(GRID):
+        for x in range(GRID):
+            px[x, y] = dither(field(x, y), x, y)
+    cover = rounded(blank, 14)
+    scaled(cover, 288).save(nodpi / "widget_cover_placeholder.png", optimize=True)
+
+    # Preview: dark card, dithered cover, text, lavender play button (≈ 4×2 cells at 2×).
+    w, h, pad, art = 640, 272, 24, 224
+    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    d.rounded_rectangle([0, 0, w - 1, h - 1], 48, fill=(14, 14, 14), outline=(42, 42, 42), width=2)
+    img.paste(scaled(rounded(render(), 14), art), (pad, pad), scaled(rounded(render(), 14), art))
+    font = lambda size: ImageFont.load_default(size=size)
+    tx = pad + art + 28
+    d.text((tx, pad + 4), "NOW PLAYING", font=font(20), fill=(138, 138, 138))
+    d.text((tx, pad + 34), "Midnight Drive", font=font(32), fill=(242, 242, 242))
+    d.text((tx, pad + 74), "Kavinsky", font=font(24), fill=(138, 138, 138))
+    cy = pad + art - 44
+    for i, cx in enumerate([tx + 40, tx + 148, tx + 256]):
+        r = 44 if i == 1 else 40
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(201, 184, 240) if i == 1 else (29, 29, 29))
+        ink = (26, 22, 38) if i == 1 else (242, 242, 242)
+        if i == 1:
+            d.rectangle([cx - 12, cy - 16, cx - 4, cy + 16], fill=ink)
+            d.rectangle([cx + 4, cy - 16, cx + 12, cy + 16], fill=ink)
+        else:
+            s = -1 if i == 0 else 1
+            d.polygon([(cx - 10 * s, cy - 16), (cx - 10 * s, cy + 16), (cx + 8 * s, cy)], fill=ink)
+            bar = sorted([cx + 10 * s, cx + 14 * s])  # the |◀ / ▶| stop bar
+            d.rectangle([bar[0], cy - 16, bar[1], cy + 16], fill=ink)
+    img.save(nodpi / "widget_preview.png", optimize=True)
 
 
 def main():
