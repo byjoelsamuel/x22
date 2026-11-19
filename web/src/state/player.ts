@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Song } from '../api/types'
 import { getEngine } from '../audio/engine'
 import { api } from './auth'
+import { bindNativeNowPlaying } from '../native/nowPlaying'
 import { bindMediaSession } from './mediaSession'
 import { activeFilters, effectivePreamp, useSettings } from './settings'
 
@@ -237,4 +238,5 @@ export function bindPlayer() {
   applyDsp()
   useSettings.subscribe(applyDsp)
   bindMediaSession()
+  bindNativeNowPlaying()
 }

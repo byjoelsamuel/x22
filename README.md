@@ -63,6 +63,8 @@ Every push to `main` builds a debug APK. Download it from **Actions → Android 
 2. Install the mkcert CA on the phone (step 1 above).
 3. Open x22 and set *Server* to `https://192.168.0.100`.
 
+**Home-screen widget:** long-press your home screen → *Widgets* → **x22 player** (4×2). It shows the dithered cover, title and artist with ⏮ ⏯ ⏭ buttons. Tapping the cover opens the app. While music plays, x22 also runs a media notification. That keeps playback alive in the background and lets your earbuds' or IEM remote's buttons control x22.
+
 **Signed release builds (optional):** create a keystore once, keep it safe, and add four repository secrets.
 
 ```bash
