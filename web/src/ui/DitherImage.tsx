@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSettings } from '../state/settings'
 import { ditherToRamp } from './dither'
 
 interface Props {
@@ -13,11 +14,12 @@ interface Props {
 export default function DitherImage({ src, alt = '', grid = 96, className }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const [failed, setFailed] = useState(false)
+  const enabled = useSettings((s) => s.ditherArt)
 
   useEffect(() => {
     setFailed(false)
     const c = canvas.current
-    if (!src || !c) return
+    if (!src || !c || !enabled) return
     let cancelled = false
     const img = new Image()
     img.crossOrigin = 'anonymous'
@@ -42,9 +44,9 @@ export default function DitherImage({ src, alt = '', grid = 96, className }: Pro
     return () => {
       cancelled = true
     }
-  }, [src, grid])
+  }, [src, grid, enabled])
 
   if (!src) return <div className={`dither-empty dither ${className ?? ''}`} aria-hidden />
-  if (failed) return <img src={src} alt={alt} className={className} />
+  if (failed || !enabled) return <img src={src} alt={alt} className={className} />
   return <canvas ref={canvas} role="img" aria-label={alt} className={`dither-canvas ${className ?? ''}`} />
 }
